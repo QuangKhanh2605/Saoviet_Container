@@ -1,0 +1,1040 @@
+/*
+    8/2021
+    Thu vien xu ly Uart
+*/
+#include "MQTTConnect.h"
+#include "MQTTFormat.h"
+#include "MQTTPacket.h"
+#include "MQTTPublish.h"
+#include "MQTTSubscribe.h"
+#include "MQTTUnsubscribe.h"
+#include "StackTrace.h"
+
+#include "user_define.h"
+
+#include "user_mqtt.h"
+#include "user_sim.h"
+
+#include "user_string.h"
+#include "cat24mxx.h"
+
+
+
+/*======================== Structs var======================*/
+const struct_MARK_TYPE_Message_SEND     sMark_MessageSend_Type[] =
+{
+    //Mess wait ACK
+    {TOPIC_NOTIF,						NULL,								{(uint8_t*)"Notif",5}},
+
+    {DATA_TSVH,				            _mDATA_TSVH_PACKET,			        {(uint8_t*)"Flash",5}}, // 
+    {DATA_TSVH_OPERA,				    _mDATA_TSVH_PACKET_OPERA,			{(uint8_t*)"Opera",5}}, // 
+    {DATA_INTAN_TSVH,				    _mDATA_INTAN_TSVH,				    {(uint8_t*)"Intan",5}}, //
+    
+    {DATA_FLASH_MEM,					_mDATA_ON_FLASH,				    {(uint8_t*)"Debug",5}}, //
+    {DATA_PING,							_mDATA_PING,						{(uint8_t*)"mPing",5}}, //
+
+    {SEND_EVENT_MESS,					_mDATA_EVENT,				        {(uint8_t*)"Event",5}}, //
+    
+    {SEND_SIM_ID,					    _mSEND_SIM_ID,					    {(uint8_t*)"SimID",5}},
+    {SEND_RESPOND_SERVER_ACK,	    	_mSEND_RESPOND_SERVER_ACK,			{(uint8_t*)"sCoFi",5}},
+    {SEND_SAVE_BOX_FAIL,				_mSEND_SAVE_BOX_FAIL,				{(uint8_t*)"sCoFi",5}},
+    {SEND_SAVE_BOX_OK,				    _mSEND_SAVE_BOK_OK,				    {(uint8_t*)"sCoFi",5}},
+    //Mess No wait ACK
+    {SEND_RESPOND_SERVER,				_mSEND_RESPOND_SERVER,				{(uint8_t*)"sCoFi",5}},
+    {SEND_SHUTTING_DOWN,				_mSEND_SHUTTING_DOWN,				{(uint8_t*)"Reset",5}},
+    {SEND_RECONNECT_SERVER,				_mSEND_RECONNECT_SERVER,			{(uint8_t*)"ReCon",5}},
+    {SEND_HARDTS_MCU,				    _mSEND_HARDRS_MCU,			        {(uint8_t*)"Alarm",5}},
+    //
+    {SEND_SERVER_TIME_PENDING,			_mSEND_SERVER_TIME_PENDING,			{(uint8_t*)"sTime",5}},    // {(uint8_t*)"Realtime pending",16}},
+    {SEND_SERVER_TIME_OK,				_mSEND_SERVER_TIME_OK,				{(uint8_t*)"sTime",5}},    // {(uint8_t*)"Realtime OK",11}},
+    {SEND_SERVER_TIME_FAIL,				_mSEND_SERVER_TIME_FAIL,			{(uint8_t*)"sTime",5}},    // {(uint8_t*)"Realtime fail",13}},
+    {SEND_EMPTY_MESS,				    _mSEND_EMPTY_MESS,				    {(uint8_t*)"sCoFi",5}},    // {(uint8_t*)"Empty Mess FLash!",17}},
+
+    {SEND_UPDATE_FIRM_OK,				_mSEND_UPDATE_FIRM_OK,				{(uint8_t*)"rFirm",5}},    // {(uint8_t*)"Realtime OK",11}},
+    {SEND_UPDATE_FIRM_FAIL,				_mSEND_UPDATE_FIRM_FAIL,			{(uint8_t*)"rFirm",5}},    // {(uint8_t*)"Realtime fail",13}}
+    
+    {END_MQTT_SEND,						NULL,								{NULL}},
+};
+
+/* */
+const struct_MARK_TYPE_Message_Receiv sMark_MessageRecei_Type[] =
+{
+    // ban tin danh rieng cho SIM
+    {REQUEST_RESET,				_rREQUEST_RESET,				{(uint8_t*)"Reset",5}},
+    {INTAN_DATA,                _rINTAN_DATA,                   {(uint8_t*)"Intan",5}},
+    {REQUEST_SETTING,			_rREQUEST_SETTING,				{(uint8_t*)"sCoFi",5}},
+    {UPDATE_TIME_SERVER,		_rUPDATE_TIME_SERVER,			{(uint8_t*)"sTime",5}},
+    {RESET_DATA,				_rRESET_DATA,	    			{(uint8_t*)"Clear",5}},
+    {REQUEST_AT,				_rReq_AT_Cmd,	    			{(uint8_t*)"ReqAT",5}},
+    
+    {REQUEST_UPDATE_FIRM,	    _rUPDATE_FIRMWARE,		        {(uint8_t*)"rFirm",5}},
+
+    {END_MQTT_RECEI,			NULL,							{NULL}},
+};
+
+
+
+const MARK_TYPE_DCU sMark_DCU_Type[] =
+{
+	{ _DHN_NBIOT_1,                     {(uint8_t*)"DCU/WMSV/WME1/",14}}, // 15 - fix 26_03_18  DCU/EMSV/SVE1/
+	{ _WM_GSM_HOABINH,	                {(uint8_t*)"DCU/WMSV/WMP2/",14}},
+	{ _TEM_HUM_NB_IOT,		            {(uint8_t*)"DCU/ENVI/TEMP/",14}},
+	{ _EMET_NB_IOT,		           	    {(uint8_t*)"DCU/EMSV/SVE1/",14}},
+};
+
+struct_MQTT				sMQTT;
+MQTTPacket_connectData 	Connect_Packet = MQTTPacket_connectData_initializer;
+MQTTString 				topicString = MQTTString_initializer;
+
+
+uint8_t	aSubcribe_Header[HEADER_LENGTH];
+uint8_t	aPublish_Header[HEADER_LENGTH];		//Header
+
+uint8_t	aDATA_MQTT[MAX_LENGTH_MQTT];        //Buffer chưa data da duoc dong goi MQTT: Bao gom Payload + Header MQTT
+uint8_t aPAYLOAD_MQTT[MAX_LENGTH_MQTT];		//Buffer chưa data chua duoc dong goi MQTT: Bao gom Payload
+
+/*======================== Function ======================*/
+
+void mSet_default_MQTT(void)
+{
+	sMQTT.str.Data_a8 		= aDATA_MQTT;
+	sMQTT.str.Length_u16 	= 0;
+
+    sMQTT.Status_u8         = FALSE;
+}
+
+
+
+/*
+ * 		FUNC : ghi ra chuoi Header Publish message day du
+ * Param :
+ * 		- sData *sTarget : Chuoi su dung *
+ * 		- Step_Data				: Dang Header
+ * 		- Kind 					: 0 Type Message in table  sMark_MessageSend_Type
+ * 								: 1 Type Message in table  sMark_MessageRecei_Type
+ * Return :
+ * 		0 - FALSE 	: 	ERROR :tran chuoi copy vao,
+ * 		1 - True 	:	Tao Thanh Cong
+ */
+
+uint8_t Write_publish_header(sData *sTarget, int Step_Data, uint8_t Kind)
+{    
+    //Set up Header Pub again   
+    UTIL_MEM_set(aPublish_Header, 0, sizeof (aPublish_Header));
+    
+    sTarget->Data_a8 = &aPublish_Header[0];
+    sTarget->Length_u16 = 0;
+
+    Copy_String(sTarget, (sData *)&sMark_DCU_Type[sModem.TypeModem_u8].sKind, 255, HEADER_LENGTH);
+
+    if (Kind == 1)
+		Copy_String(sTarget, (sData *)&sMark_MessageRecei_Type[Step_Data].sKind, 255, HEADER_LENGTH);
+	else
+        Copy_String(sTarget, (sData *)&sMark_MessageSend_Type[Step_Data].sKind, 255, HEADER_LENGTH);
+    
+	*(sTarget->Data_a8 + sTarget->Length_u16++) = '/';
+    
+	Copy_String(sTarget, &sModem.sDCU_id, 255, HEADER_LENGTH);
+
+	return 1;
+}
+
+
+/*
+ * Ham gui ban tin MQTT.
+ * return 	TRUE : neu gui thanh cong va nhan lai FEEDBACK
+ * 			FALSE : Neu gui > MAX_Resend ma ko co FB lai tu AMI
+ * 	neu Max_Resend = 0xFF -> Ham luon tra ve TRUE */
+
+
+
+void mSend_Packet_MQTT(struct_MQTT *mqtt)
+{
+    //Dong goi Ban tin connect
+    HAL_UART_Transmit(&uart_debug, (uint8_t*)"\r\n Message transfer: \r\n", 23, 1000); 
+    HAL_UART_Transmit(&uart_sim, mqtt->str.Data_a8, mqtt->str.Length_u16, 1000);    
+}
+
+
+void mData_MQTT (uint8_t MessType)
+{
+    mSet_default_MQTT();        //dua con tro MQTT.str.data_u8 tro dau mang aDATA_MQTT
+    
+    sMQTT.PulishQos = MY_QOS;
+	sMQTT.PulishRetained = 0;
+	sMQTT.PulishPacketId = 1;
+    
+    Write_publish_header(&sMQTT.sPublishHeader, MessType, 0);
+	topicString.cstring = (char*) sMQTT.sPublishHeader.Data_a8;
+    
+    sMQTT.str.Length_u16 = MQTTSerialize_publish(sMQTT.str.Data_a8, sizeof(aDATA_MQTT), 0, sMQTT.PulishQos, \
+            sMQTT.PulishRetained, sMQTT.PulishPacketId, topicString, sMQTT.sPayload.Data_a8, sMQTT.sPayload.Length_u16);
+}
+
+/*============= Func Callback ============================*/
+
+uint8_t _mDATA_TSVH_PACKET(int Kind_Send)
+{
+    uint16_t    i = 0;
+    uint8_t     IndexMess = 0;
+    uint16_t    IndexRead = 0;
+    uint8_t     TempCrC = 0;
+
+    //Ðoc record tu Flash ra-> Dong goi du lieu vao sMQTT.sPayload
+    sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+    sMQTT.sPayload.Length_u16 = 0;
+
+	sRecTSVH.CountMessPacket_u16 = 0;
+    while (sRecTSVH.CountMessPacket_u16 < MAX_MESS_IN_PACKET)
+    {
+        IndexRead = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
+        if (IndexRead == sRecTSVH.IndexSave_u16) 
+            break;
+    #ifdef MEMORY_ON_FLASH
+        if (Flash_Read_Record ((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)  //ban tin doc ra loi bo qua.
+            IndexMess++;
+    #else    
+        if (ExMem_Read_Record((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)
+            IndexMess++;
+    #endif   
+        sRecTSVH.CountMessPacket_u16++;
+    }
+
+    if (IndexMess != 0)  //neu có ban tin duoc dong goi thi moi add crc vao
+    {
+        //crc tat ca cac byte.
+        sMQTT.sPayload.Length_u16++;
+        for (i = 0; i < (sMQTT.sPayload.Length_u16 - 1); i++)
+            TempCrC ^= *(sMQTT.sPayload.Data_a8 + i);
+
+        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16 - 1) = TempCrC;
+        
+        mData_MQTT(Kind_Send);
+        
+        return 1;
+    } 
+    //Neu cac ban tin doc ra loi -> Cong index send lên (De bo qua) -> Tiep tuc gưi tiep
+    if (sRecTSVH.CountMessPacket_u16 != 0)
+    {
+        sRecTSVH.IndexSend_u16 = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
+        
+        #ifdef MEMORY_ON_FLASH
+            Flash_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
+        #else
+            ExMem_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
+        #endif
+            
+        sRecTSVH.CountMessPacket_u16 = 0;
+    }
+    
+    return 0;
+}
+
+
+
+uint8_t _mDATA_TSVH_PACKET_OPERA (int Kind_Send)
+{
+    uint8_t     IndexMess = 0;
+    uint16_t    IndexRead = 0;
+
+    //Ðoc record tu Flash ra-> Dong goi du lieu vao sMQTT.sPayload
+    sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+    sMQTT.sPayload.Length_u16 = 0;
+
+	sRecTSVH.CountMessPacket_u16 = 0;
+    while (sRecTSVH.CountMessPacket_u16 < MAX_MESS_IN_PACKET)
+    {
+        IndexRead = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
+        if (IndexRead == sRecTSVH.IndexSave_u16) 
+            break;
+        
+        #ifdef MEMORY_ON_FLASH
+            if (Flash_Read_Record_Without_Index ((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)  //ban tin doc ra loi bo qua.
+                IndexMess++;
+        #else    
+            if (ExMem_Read_Record_Without_Index((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload ) == 1)
+                IndexMess++;
+        #endif   
+            
+        sRecTSVH.CountMessPacket_u16++;
+        break;  //Su dung topic OPERA thi gui nhu nay
+    }
+    
+    //neu có ban tin duoc dong goi thi moi add crc vao
+    if (IndexMess != 0)  
+    {        
+        mData_MQTT(Kind_Send);
+        
+        return 1;
+    } 
+    //Neu cac ban tin doc ra loi -> Cong index send lên (De bo qua) -> Tiep tuc gưi tiep
+    if (sRecTSVH.CountMessPacket_u16 != 0)
+    {
+        sRecTSVH.IndexSend_u16 = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
+        
+        #ifdef MEMORY_ON_FLASH
+            Flash_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
+        #else
+            ExMem_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
+        #endif
+            
+        sRecTSVH.CountMessPacket_u16 = 0;
+    }
+    
+    return 0;
+}
+
+
+uint8_t _mDATA_INTAN_TSVH(int Kind_Send)
+{
+//    uint16_t    i = 0;
+//    uint8_t     length = 0;
+//    uint8_t     TempCrC = 0;
+
+    //Ðoc record tu Flash ra-> Dong goi du lieu vao sMQTT.sPayload
+    sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+    sMQTT.sPayload.Length_u16 = 0;
+
+//    *(sMQTT.sPayload.Data_a8) = 0x01;  //STT packet
+//    length = Modem_Packet_TSVH (sMQTT.sPayload.Data_a8 + 2);   //Doc ra va luu tu vi tri thu 2
+//    *(sMQTT.sPayload.Data_a8 + 1) = length;
+//    sMQTT.sPayload.Length_u16 = length + 2;
+        
+    #ifdef USING_APP_WM
+        sMQTT.sPayload.Length_u16 = Modem_Packet_TSVH (sMQTT.sPayload.Data_a8);
+    #endif
+    
+//    //crc tat ca cac byte.
+//    sMQTT.sPayload.Length_u16++;
+//    for (i = 0; i < (sMQTT.sPayload.Length_u16 - 1); i++)
+//        TempCrC ^= *(sMQTT.sPayload.Data_a8 + i);
+//
+//    *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16-1) = TempCrC;
+    //
+    mData_MQTT(Kind_Send);   
+    
+    return 1;
+}
+
+
+uint8_t _mDATA_ON_FLASH(int Kind_Send)
+{
+    return 1;
+}
+
+
+
+uint8_t _mSEND_SHUTTING_DOWN(int Kind_Send)
+{
+    sData sPayLoadShutdown = {(uint8_t*)"MCU shutting down", 17};
+
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, SEND_SHUTTING_DOWN);
+	mPayload_Load_MesErr(&sPayLoadShutdown);
+    
+    mData_MQTT(Kind_Send);   
+        
+    return 1;
+}
+
+uint8_t _mSEND_RECONNECT_SERVER(int Kind_Send)
+{
+    sData sPayLoadReConn = {(uint8_t*)"MQTT ReConnect!", 15};
+
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, SEND_SHUTTING_DOWN);
+	mPayload_Load_MesErr(&sPayLoadReConn);
+    
+    mData_MQTT(Kind_Send);   
+        
+    return 1;
+}
+
+uint8_t _mSEND_HARDRS_MCU(int Kind_Send)
+{
+    sData sPayLoadReConn = {(uint8_t*)"Alarm: Hard Reset MCU!", 23};
+
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, SEND_SHUTTING_DOWN);
+	mPayload_Load_MesErr(&sPayLoadReConn);
+    
+    mData_MQTT(Kind_Send);  
+    
+    return 1;
+}
+
+/*
+ * 		PUBLISH MESSAGE
+ */
+uint8_t _mDATA_PING(int Kind_Send)
+{
+	_mInsert_Ping_Payload(&sMQTT.sPayload);
+    
+    mData_MQTT(Kind_Send);  
+    
+    return 1;
+}
+
+
+uint8_t _mDATA_EVENT(int Kind_Send)
+{
+    uint16_t    i = 0;
+    uint8_t     IndexMess = 0;
+    uint16_t    IndexRead = 0;
+    uint8_t     TempCrC = 0;
+
+    //Ðoc record tu Flash ra-> Dong goi du lieu vao sMQTT.sPayload
+    sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+    sMQTT.sPayload.Length_u16 = 0;
+
+	sRecEvent.CountMessPacket_u16 = 0;
+    while (sRecEvent.CountMessPacket_u16 < MAX_MESS_IN_PACKET)
+    {
+        IndexRead = (sRecEvent.IndexSend_u16 + sRecEvent.CountMessPacket_u16) % sRecEvent.MaxRecord_u16;
+        if (IndexRead == sRecEvent.IndexSave_u16) 
+            break;
+    #ifdef MEMORY_ON_FLASH 
+        if (Flash_Read_Packet ((uint32_t)(ADDR_EVENT_START + sRecEvent.SizeRecord_u16* IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)  //ban tin doc ra loi bo qua.
+            IndexMess++;
+    #else
+        if (ExMem_Read_Record((uint32_t)(CAT_ADDR_EVENT_START + sRecEvent.SizeRecord_u16 * IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)
+            IndexMess++;
+    #endif
+        sRecEvent.CountMessPacket_u16++;
+    }
+
+    if (IndexMess != 0)  //neu có ban tin duoc dong goi thi moi add crc vao
+    {
+        //crc tat ca cac byte.
+        sMQTT.sPayload.Length_u16++;
+        for (i = 0; i < (sMQTT.sPayload.Length_u16 - 1); i++)
+            TempCrC ^= *(sMQTT.sPayload.Data_a8 + i);
+
+        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16 - 1) = TempCrC;
+        
+        mData_MQTT(Kind_Send);
+        
+        return 1;
+    }
+    
+    //Neu cac ban tin doc ra loi -> Cong index send lên (De bo qua) -> Tiep tuc gưi tiep
+    if (sRecEvent.CountMessPacket_u16 != 0)
+    {
+        sRecEvent.IndexSend_u16 = (sRecEvent.IndexSend_u16 + sRecEvent.CountMessPacket_u16) % sRecEvent.MaxRecord_u16;
+        
+        #ifdef MEMORY_ON_FLASH
+            Flash_Save_Index(sRecEvent.AddIndexSend_u32, sRecEvent.IndexSend_u16);
+        #else
+            ExMem_Save_Index(sRecEvent.AddIndexSend_u32, sRecEvent.IndexSend_u16);
+        #endif
+            
+        sRecEvent.CountMessPacket_u16 = 0;
+    }
+    
+    return 0;
+}
+
+
+
+void _mInsert_Ping_Payload (sData *Payload)
+{
+	uint8_t	    i = 0;
+	uint8_t     var = 0;
+	uint8_t     TempCrc = 0;
+
+	Payload->Data_a8 		= aPAYLOAD_MQTT;
+	Payload->Length_u16 	= MAX_LENGTH_MQTT;
+
+	Reset_Buff(Payload);
+    *(Payload->Data_a8 + Payload->Length_u16++)  = '#'; 
+	// SIM_ID
+	*(Payload->Data_a8 + Payload->Length_u16++) = 0x01; // obit
+	*(Payload->Data_a8 + Payload->Length_u16++) = sSimInfor.sSIMid.Length_u16; // length
+	//
+	for (var = 0; var < sSimInfor.sSIMid.Length_u16; ++var)
+		*(Payload->Data_a8 + Payload->Length_u16++)  = sSimInfor.sSIMid.Data_a8[var];
+	//sacle
+	*(Payload->Data_a8 + Payload->Length_u16++)  = 0x00;   //scale
+    //Insert Version
+    *(Payload->Data_a8 + Payload->Length_u16++)  = '#';    
+    for (var = 0; var < sFirmVersion.Length_u16; ++var)
+		*(Payload->Data_a8 + Payload->Length_u16++)  = sFirmVersion.Data_a8[var];
+    
+    *(Payload->Data_a8 + Payload->Length_u16++)  = '#'; 
+    
+    
+	// caculator crc
+	Payload->Length_u16++;
+	for (i = 0; i < (Payload->Length_u16 - 1); i++)
+		TempCrc ^= *(Payload->Data_a8 + i);
+
+	*(Payload->Data_a8 + Payload->Length_u16 - 1) = TempCrc;
+}
+
+
+
+
+uint8_t _mSEND_SIM_ID(int Kind_Send)
+{
+	_mPayload_Sim_ID(&sMQTT.sPayload);  // Load DATA for Payload
+
+    mData_MQTT(Kind_Send);   
+    
+    return 1;
+}
+
+
+
+void _mPayload_Sim_ID(sData *Payload)
+{
+	uint8_t	    i = 0;
+    uint8_t     var = 0;
+    uint8_t     TempCrc = 0;
+
+	Payload->Data_a8 		= aPAYLOAD_MQTT;
+	Payload->Length_u16 	= MAX_LENGTH_MQTT;
+
+	Reset_Buff(Payload);
+
+	//----------------------- start send data below ---------------------
+    // SIM_ID
+	*(Payload->Data_a8 + Payload->Length_u16++) = 0x01; // obit
+	*(Payload->Data_a8 + Payload->Length_u16++) = sSimInfor.sSIMid.Length_u16; // length
+    //
+	for (var = 0; var < sSimInfor.sSIMid.Length_u16; ++var)
+		*(Payload->Data_a8 + Payload->Length_u16++)  = sSimInfor.sSIMid.Data_a8[var];
+    //sacle
+	*(Payload->Data_a8 + Payload->Length_u16++)  = 0x00;   //scale
+    // caculator crc
+    Payload->Length_u16++;
+	for (i = 0; i < (Payload->Length_u16 - 1); i++)
+		TempCrc ^= *(Payload->Data_a8 + i);
+
+    *(Payload->Data_a8 + Payload->Length_u16 - 1) = TempCrc;
+}
+
+
+
+uint8_t _mSEND_RESPOND_SERVER(int Kind_Send)
+{
+//    uint16_t i = 0;
+//
+//	sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+//	sMQTT.sPayload.Length_u16 = MAX_LENGTH_MQTT;
+//    
+//	Reset_Buff(&sMQTT.sPayload);
+//
+//    for (i = 0; i < LengthResPond; i++)
+//      *(sMQTT.sPayload.Data_a8 +  sMQTT.sPayload.Length_u16++) = aResPondAT[i];
+//    
+//    mData_MQTT(Kind_Send);  
+    
+    return 1;
+}
+
+uint8_t _mSEND_RESPOND_SERVER_ACK(int Kind_Send)
+{
+//    uint8_t i = 0;
+//
+//    sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+//	sMQTT.sPayload.Length_u16 = MAX_LENGTH_MQTT;
+//	Reset_Buff(&sMQTT.sPayload);
+//
+//    for (i = 0; i <LengthResPond; i++)
+//      *(sMQTT.sPayload.Data_a8 +  sMQTT.sPayload.Length_u16++) = aResPondAT[i];
+//    
+//    mData_MQTT(Kind_Send);  
+    
+    return 1;
+}
+
+
+//
+void mPayload_Update_Add(uint8_t *Add_array, uint8_t Code, uint8_t Err)
+{
+	sMQTT.sPayload.Data_a8 		= Add_array;
+	*sMQTT.sPayload.Data_a8		= Code;
+	sMQTT.sPayload.Length_u16	= 1;
+}
+//
+void mPayload_Load_MesErr(sData *Payload)
+{
+ 	uint8_t var;
+
+	for (var = 0; var < Payload->Length_u16; ++var)
+		*(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(Payload->Data_a8 + var);
+}
+
+uint8_t _mSEND_SERVER_TIME_PENDING(int Kind_Send)
+{
+    sData sPayTimePending = {(uint8_t *) "Realtime pending",16};
+    
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
+	mPayload_Load_MesErr(&sPayTimePending);
+    
+    mData_MQTT(Kind_Send);   
+    
+    return 1;
+}
+
+uint8_t _mSEND_SERVER_TIME_OK(int Kind_Send)
+{
+    sData sPayTimeOK = {(uint8_t *) "Realtime OK", 11};
+    
+	mPayload_Update_Add(aPAYLOAD_MQTT,MS_CORRECT,Kind_Send);
+	mPayload_Load_MesErr(&sPayTimeOK);
+    
+    mData_MQTT(Kind_Send);   
+    
+    return 1;
+}
+
+
+uint8_t _mSEND_SERVER_TIME_FAIL(int Kind_Send)
+{
+    sData sPayTimeFail = {(uint8_t *) "Realtime fail", 13};
+    
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_FAIL, Kind_Send);
+	mPayload_Load_MesErr(&sPayTimeFail);
+    
+    mData_MQTT(Kind_Send);  
+    
+    return 1;
+}
+
+uint8_t _mSEND_SAVE_BOX_FAIL(int Kind_Send)
+{
+    sData sPaySaveBoxFail = {(uint8_t*)"Luu Kho Fail", 12};
+    
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
+	mPayload_Load_MesErr(&sPaySaveBoxFail);
+    
+    mData_MQTT(Kind_Send); 
+    
+    return 1;
+}
+
+uint8_t _mSEND_SAVE_BOK_OK(int Kind_Send)
+{
+    sData sPaySaveBoxOK = {(uint8_t*)"\r\nOK", 4};
+    
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
+	mPayload_Load_MesErr(&sPaySaveBoxOK);
+    
+    mData_MQTT(Kind_Send); 
+    
+    return 1;
+}
+
+
+
+
+uint8_t _mSEND_EMPTY_MESS(int Kind_Send)
+{
+    sData sPayEmpFlashFail = {(uint8_t*)"Empty Mess FLash!", 17};
+    
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
+	mPayload_Load_MesErr(&sPayEmpFlashFail);
+    
+    mData_MQTT(Kind_Send); 
+    
+    return 1;
+}
+
+
+uint8_t _mSEND_UPDATE_FIRM_OK(int Kind_Send)
+{
+    sData strFirmSuccess = {(uint8_t*)"Update Firmware Successfully!", 29};
+    sData strWaitPulse = {(uint8_t*)" - Wait increase 5 pulse", 24};
+    
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
+	mPayload_Load_MesErr(&strFirmSuccess);
+    
+    Modem_Log_Debug_String(strFirmSuccess.Data_a8, strFirmSuccess.Length_u16);
+    
+    if (sModem.IsAllowReset_u8 == 0)
+    {
+        mPayload_Load_MesErr(&strWaitPulse);
+        Modem_Log_Debug_String(strWaitPulse.Data_a8, strWaitPulse.Length_u16);
+    }
+      
+    mData_MQTT(Kind_Send); 
+        
+    return 1;
+}
+
+
+uint8_t _mSEND_UPDATE_FIRM_FAIL(int Kind_Send)
+{
+    sData strFirmFail;
+    sData strWaitPulse = {(uint8_t*)" - Wait increase 5 pulse", 24};
+    
+//    switch (sSimFwUpdate.Receiver_u8)
+//    {
+//        case SEND_UPDATE_FIRMWARE_FAIL_LENGTH:
+//            strFirmFail.Data_a8 = (uint8_t*) "Update Fail Length!";
+//            strFirmFail.Length_u16 = 19;
+//            break;
+//        case SEND_UPDATE_FIRMWARE_FAIL_FLASH:
+//            strFirmFail.Data_a8 = (uint8_t*) "Update Fail Flash!";
+//            strFirmFail.Length_u16 = 18;
+//            break;
+//        case SEND_UPDATE_FIRMWARE_FAIL_TIME:
+//            strFirmFail.Data_a8 = (uint8_t*) "Update Fail Time!";
+//            strFirmFail.Length_u16 = 17;
+//            break;
+//        case SEND_UPDATE_FIRMWARE_FAIL_SETUP:
+//            strFirmFail.Data_a8 = (uint8_t*) "Update Fail Setup!";
+//            strFirmFail.Length_u16 = 18;
+//            break;
+//        default:
+//            strFirmFail.Data_a8 = (uint8_t*) "Update Fail!";
+//            strFirmFail.Length_u16 = 12;
+//            break;
+//    }
+            
+            
+	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
+	mPayload_Load_MesErr(&strFirmFail);
+    
+    Modem_Log_Debug_String(strFirmFail.Data_a8, strFirmFail.Length_u16);
+    
+    if (sModem.IsAllowReset_u8 == 0)
+    {
+        mPayload_Load_MesErr(&strWaitPulse);
+        Modem_Log_Debug_String(strWaitPulse.Data_a8, strWaitPulse.Length_u16);
+    }
+    
+    mData_MQTT(Kind_Send); 
+        
+    return 1;
+}
+
+ 
+
+
+/*---------------Function Callbacck recei-----------------------*/
+
+void _rREQUEST_RESET(sData *str_Receiv, int16_t Pos)
+{
+    sMQTT.aMARK_MESS_PENDING[SEND_SHUTTING_DOWN] = TRUE;
+}
+
+void _rINTAN_DATA (sData *str_Receiv,int16_t Pos)
+{
+	//31/8/2022: intan -> measure ap suat -> send Intan
+	sModem.IsReqIntanMess_u8 = TRUE;
+	//Active event Measure Press
+	fevent_active(sEventApp, EVENT_IDLE);
+	fevent_active(sEventApp, EVENT_MEAS_PRESSURE);
+}
+
+
+void _rREQUEST_SETTING(sData *str_Receiv,int16_t Pos)
+{
+//    uint8_t   length = sMark_MessageRecei_Type[REQUEST_SETTING].sKind.Length_u16;
+//    uint16_t  PosFix = length + Pos;
+//    uint8_t   TempLeng;
+//    uint8_t   ObisConfig = 0;
+//
+//    PortConfig = 2;
+//    //chay tu tren xuong duoi de check tat ca cac obis cau hinh
+//    while ((PosFix + 4) <= str_Receiv->Length_u16)   //vi byte cuoi la crc
+//    {
+//        TempLeng = 0;
+//        ObisConfig = *(str_Receiv->Data_a8 + PosFix++);
+//        switch(ObisConfig)   //luon luon co 1 byte crc phía sau
+//        {
+//            case 0x01:  //Lenh set duty cycle: Ex: 0102000A09.
+////                if (sModem.ModeSimPower_u8 == _MODE_ONLINE)
+////                {
+////                    PosFix++;   //tro toi data
+////                    sModem.DutySendData_u32 = *(str_Receiv->Data_a8 + PosFix++) << 8;
+////                    sModem.DutySendData_u32 += *(str_Receiv->Data_a8 + PosFix);
+////                    sModem.DutySendData_u32 *= 60000;
+////                    //Luu lai
+////                #ifdef MEMORY_ON_FLASH 
+////                    EEPROM_Save_Freq_Send_Data();
+////                #endif
+////                    mRespond_Config_Server (PortConfig, (uint8_t *)"\r\nOK",4);  //
+////                    SysApp_Set_Next_TxTimer();
+////                } else
+////                {
+////                    TempLeng = *(str_Receiv->Data_a8 + PosFix);   //length
+////                    sMQTT.TypeConfigServer_u8 = 1;
+////                    _rSet_Duty_ByWeb(str_Receiv, PosFix);
+////                    PosFix = PosFix + 1 + TempLeng;   //1 byte length va length byte data
+////                    
+////                    SysApp_Set_Next_TxTimer();
+////                }
+//                break;
+//            case 0x08:  //query Duty cycle: ban tin tra ve gom: So lan X dutywakeup
+//                TempLeng = *(str_Receiv->Data_a8 + PosFix);   //length
+//                _fQUERY_DUTY_READ_DA(str_Receiv, PosFix);
+//                PosFix = PosFix + 1 + TempLeng;   //1 byte length va length byte data
+//                break;
+//            case 0x02:   //Lenh Reset so xung ve 0
+//                TempLeng = *(str_Receiv->Data_a8 + PosFix);   //length
+//                _fSET_DATAPULSE_DEFAUL(str_Receiv, PosFix);
+//                PosFix = PosFix + 1 + TempLeng;   //1 byte length va length byte data
+//                break;
+//            case 0x03:  //set ve che do luu kho
+//                TempLeng = *(str_Receiv->Data_a8 + PosFix);   //length
+//                sMQTT.TypeConfigServer_u8 = 3;
+//                _fSET_SAVE_BOX(str_Receiv, PosFix);   //doi phan hoi OK thi moi cho luu kho
+//                PosFix = PosFix + 1 + TempLeng;   //1 byte length va length byte data
+//                break;
+//            case 0x04:  //Config nay cua dong ho nc tong
+//                TempLeng = *(str_Receiv->Data_a8 + PosFix);   //length
+//                PosFix = PosFix + 1 + TempLeng;   //1 byte length va length byte data
+//            case 0x06:  //Set so lan thuc day. Cho dong bo voi Nuoc hoa binh cua tiep de thong nhat
+//                TempLeng = *(str_Receiv->Data_a8 + PosFix);   //length
+//                _rSet_Num_WakeUp_ByWeb(str_Receiv, PosFix);
+//                PosFix = PosFix + 1 + TempLeng;   //1 byte length va length byte data
+//                break;
+//            case 0X07:  //Tam cho readlog type 1
+//                TempLeng = *(str_Receiv->Data_a8 + PosFix);   //length
+//
+//                PosFix = PosFix + 1 + TempLeng;   //1 byte length va length byte data
+//                break;
+//            default:
+//                return;
+//        }
+//    }
+}
+
+
+
+void _rUPDATE_TIME_SERVER(sData *str_Receiv,int16_t Pos)
+{
+	ST_TIME_FORMAT 	sRTC_temp = {0};
+	uint8_t length = sMark_MessageRecei_Type[UPDATE_TIME_SERVER].sKind.Length_u16;
+
+	if (Pos > 0)
+    { // nhan duoc ban tin Realtime
+		sRTC_temp.year 		= *(str_Receiv->Data_a8 + Pos + length);
+		sRTC_temp.month 	= *(str_Receiv->Data_a8 + Pos + length + 1);
+		sRTC_temp.date 		= *(str_Receiv->Data_a8 + Pos + length + 2);
+		sRTC_temp.day 		= *(str_Receiv->Data_a8 + Pos + length + 3);
+		sRTC_temp.hour 		= *(str_Receiv->Data_a8 + Pos + length + 4);
+		sRTC_temp.min 		= *(str_Receiv->Data_a8 + Pos + length + 5);
+		sRTC_temp.sec 		= *(str_Receiv->Data_a8 + Pos + length + 6);
+	}
+	if (Check_update_Time(&sRTC_temp) == TRUE)
+    {
+	    sRTCSet.year 		= sRTC_temp.year;
+	    sRTCSet.month 		= sRTC_temp.month;
+	    sRTCSet.date 		= sRTC_temp.date;
+	    sRTCSet.day 		= sRTC_temp.day;
+	    sRTCSet.hour 		= sRTC_temp.hour;
+	    sRTCSet.min 		= sRTC_temp.min;
+	    sRTCSet.sec 		= sRTC_temp.sec;
+        
+		fevent_active(sEventApp, EVENT_SET_RTC); 
+        
+		sMQTT.aMARK_MESS_PENDING[SEND_SERVER_TIME_OK] = 1;  
+	} else
+    {
+		if ((*(str_Receiv->Data_a8 + Pos + length + 2) == 'U') && (*(str_Receiv->Data_a8 + Pos + length + 3) == 'd'))
+		{ // Cap nhat thoi gian
+			sMQTT.aMARK_MESS_PENDING[SEND_SERVER_TIME_PENDING] = 1;
+		} else
+			sMQTT.aMARK_MESS_PENDING[SEND_SERVER_TIME_FAIL] = 1;
+	}
+}
+
+void _rRESET_DATA(sData *str_Receiv,int16_t Pos)
+{
+//    _rClear_Data_InFlash();    
+//    DCU_Respond(2, (uint8_t *)"\r\nXoa Flash OK", 14);
+//    Reset_Chip();
+}
+
+void _rReq_AT_Cmd(sData *str_Receiv,int16_t Pos)
+{
+//    PrintDebug(&uart_debug, (uint8_t*) "Check AT Request by Server\r\n", 28, 1000);
+//    Check_AT_User(str_Receiv, _AT_REQUEST_SERVER);  //check cac lenh AT cmd
+}
+
+void _rUPDATE_FIRMWARE(sData *str_Receiv,int16_t Pos)
+{
+//    if (sModem.ModeSimPower_u8 == _MODE_ONLINE)
+//    {
+//        // Split FTP
+//        if (mUpdate_Split_FTP(str_Receiv) == TRUE)
+//        {
+//            
+//        } else
+//            DCU_Respond(2, (uint8_t *)"\r\nERROR", 7);
+//    } else
+//    {
+//        DCU_Respond(2, (uint8_t *)"\r\nERROR", 7);
+//    }
+}
+
+
+
+/*
+ *  Return 	1 : Neu chia cac chuoi ten ra thanh cong
+ *  		0 : ko thanh cong
+ */
+
+uint8_t	 mUpdate_Split_FTP(sData *str_Receiv)
+{
+	int pos;
+    
+	pos = Find_String_V2((sData *)&sMark_MessageRecei_Type[REQUEST_UPDATE_FIRM].sKind, str_Receiv);
+	pos += sMark_MessageRecei_Type[REQUEST_UPDATE_FIRM].sKind.Length_u16;
+    //Start path
+    Reset_Buff(&sSimFwUpdate.StrURL_FirmPath);
+	if (Cut_String(str_Receiv,&pos, &sSimFwUpdate.StrURL_FirmPath) == FALSE) 
+        return 0;
+       
+    Reset_Buff(&sSimFwUpdate.StrURL_FirmName);
+	if (Cut_String(str_Receiv, &pos, &sSimFwUpdate.StrURL_FirmName) == FALSE) 
+        return 0;
+      
+    //IP port user pass de mac dinh
+	return 1;
+}
+
+
+
+
+
+void _rClear_Data_InFlash (void)
+{
+    
+}
+
+
+void _rSet_Num_WakeUp_ByWeb (sData *str_Receiv, uint16_t Pos) //060105
+{
+//    uint8_t TempU8 = 0;
+//    uint8_t Lengdata = 0;
+//
+//    Lengdata = *(str_Receiv->Data_a8 + Pos++);
+//    TempU8 = *(str_Receiv->Data_a8 + Pos++);
+//    if ((Lengdata == 1) && (TempU8 <= MAX_NUMBER_WAKE_UP))
+//    {
+//    	sModem.NumWakeupToSend_u8 = TempU8;
+//        Save_Freq_Send_Data ();
+//        DCU_Respond_WAIT_ACK (2, (uint8_t *)"\r\nOK",4);
+//    } else
+//    	DCU_Respond(2, (uint8_t *)"\r\nFAIL",6);
+
+}
+
+void _rSet_Duty_ByWeb(sData *str_Receiv, uint16_t Pos)
+{
+    uint16_t TempFre = 0;
+    uint8_t Lengdata = 0;
+
+    Lengdata = *(str_Receiv->Data_a8 + Pos++);
+    if ((Lengdata == 2) && (str_Receiv->Length_u16 >= 5))
+    {
+        TempFre = *(str_Receiv->Data_a8 + Pos++);
+        TempFre = TempFre * 256 + *(str_Receiv->Data_a8 + Pos++);
+        sModem.FreqWakeup_u32 = TempFre;
+        //Luu gia tri config
+        Save_Freq_Send_Data ();
+        
+        mRespond_Config_Server (_AT_REQUEST_SERVER, (uint8_t *)"\r\nOK",4);  //lam tiep
+    } else
+    	mRespond_Config_Server(_AT_REQUEST_SERVER, (uint8_t *)"\r\nFail Length!",14);
+}
+
+
+/*---------------Function handle-----------------------*/
+void mInit_Header_Subcribe (void)
+{
+	sData           Temp 			= {(uint8_t*)"/#",2};
+	MQTTString      topicSubcri[] 	= {MQTTString_initializer,MQTTString_initializer};
+	int			    MsgId, ReqQos[] = {SUB_QOS,SUB_QOS};
+	sData 	        cHeaderSUB_8u   = {(uint8_t*)"AMI/",4} ;
+    uint8_t		    aHeader1[HEADER_LENGTH] = {0};
+    uint8_t		    aHeader2[HEADER_LENGTH] = {0};
+    sData sHeader[] = { {aHeader1, 0}, {aHeader2, 0} };
+
+    // init
+    UTIL_MEM_set(aSubcribe_Header, 0, sizeof(aSubcribe_Header));
+	sMQTT.sSubcribe.Data_a8				= aSubcribe_Header;
+	sMQTT.sSubcribe.Length_u16 			= 0;
+    // Subcriber
+    // Topic 1
+	Copy_String(&sHeader[0], (sData *) &cHeaderSUB_8u, 255, HEADER_LENGTH);
+	Copy_String(&sHeader[0], &sModem.sDCU_id, 255, HEADER_LENGTH);
+	Copy_String(&sHeader[0], &Temp, 255, HEADER_LENGTH);
+    
+	topicSubcri[0].cstring = (char*)sHeader[0].Data_a8;
+	MsgId = MY_ID1 | (MY_ID2 << 8);
+    // Topic 2
+	Copy_String(&sHeader[1],(sData *)&cHeaderSUB_8u,255,HEADER_LENGTH);
+	Copy_String(&sHeader[1],(sData *)&sMark_MessageRecei_Type[UPDATE_TIME_SERVER].sKind,255,HEADER_LENGTH);
+    
+	topicSubcri[1].cstring = (char*)sHeader[1].Data_a8;
+    
+	sMQTT.sSubcribe.Length_u16 = MQTTSerialize_subscribe(sMQTT.sSubcribe.Data_a8, HEADER_LENGTH, 0, MsgId, 2, topicSubcri, ReqQos);
+}
+
+
+
+void mConnect_MQTT (void)
+{
+    sMQTT.KeepAliveTime_u8 = sServerInfor.KeepAlive_u32;
+    
+	mSet_default_MQTT();
+	Connect_Packet.clientID.cstring = (char*)sModem.sDCU_id.Data_a8;
+	Connect_Packet.keepAliveInterval = sMQTT.KeepAliveTime_u8;
+	Connect_Packet.cleansession = 1;
+	Connect_Packet.username.cstring = (char*)sServerInfor.sUserNameMQTTMain.Data_a8;
+	Connect_Packet.password.cstring = (char*)sServerInfor.sPasswordMQTTMain.Data_a8;
+
+	//dua ban tin chua id username pass vao buff
+	sMQTT.str.Length_u16 = MQTTSerialize_connect(sMQTT.str.Data_a8, sizeof(aDATA_MQTT), &Connect_Packet);
+	//gui ban tin chua id va username pass lên uart sim va uart debug
+	sMQTT.LandmarkSendPing_u32 = RtCountSystick_u32;
+
+	mSend_Packet_MQTT(&sMQTT);
+}
+
+
+
+void mSubcribe_MQTT (void)
+{
+    mInit_Header_Subcribe();
+    
+	mSet_default_MQTT();
+	sMQTT.str.Data_a8 		= sMQTT.sSubcribe.Data_a8;
+	sMQTT.str.Length_u16 	= sMQTT.sSubcribe.Length_u16;
+	// Send sub trong 2 truong hop : DATA va Time
+	mSend_Packet_MQTT(&sMQTT);
+}
+
+
+void mPublish_MQTT (void)
+{
+    mSend_Packet_MQTT(&sMQTT);
+}
+
+/*
+    Func: Check empty mess
+*/
+uint8_t mCheck_Empty_Mess (void)
+{
+    uint16_t i = 0;
+    
+    for (i = TOPIC_NOTIF; i < END_MQTT_SEND; i++)
+        if (sMQTT.aMARK_MESS_PENDING[i] == 1)
+            return 0;
+
+    return 1;
+}
+
+
+
+void mRespond_Config_Server (uint8_t portNo, uint8_t *data, uint16_t length)
+{
+    //Copy Data vao buffer Resp
+    sMQTT.aMARK_MESS_PENDING[SEND_RESPOND_SERVER_ACK] = TRUE;
+}
+
+
+
