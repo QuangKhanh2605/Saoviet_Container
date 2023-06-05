@@ -22,7 +22,7 @@
 #define LENGTH_HTTP_URL         80
 
 #define LENGTH_HEADER_FW        12
-#define MAX_LENGTH_GPS          30
+#define MAX_LENGTH_GPS          100
 
 /*===== Char MQTT =======*/
 #define MY_CONNACK              0x20
@@ -159,6 +159,7 @@ typedef enum
     
 	_SIM_COMM_EVENT_SIM_CARD,
     _SIM_COMM_EVENT_GET_STIME, 
+    _SIM_COMM_EVENT_GPS_OK, 
     
     _SIM_COMM_EVENT_TCP_SEND_1,
     _SIM_COMM_EVENT_TCP_SEND_2,

@@ -3,7 +3,7 @@
     Thu vien Quan ly cac function convert
 */
 #include "user_util.h"
-
+#include "string.h"
 
 /*===================Struct, Var=========================*/
 uint32_t        RtCountSystick_u32;
@@ -347,37 +347,76 @@ uint8_t Convert_String_To_Hex (uint8_t NumString)
         return (NumString - 0x57);	 
 }
 
-
-void UTIL_Print_Number (uint32_t Number)
-{
-    uint8_t Buff[10] = {0};
-    sData   strNum = {&Buff[0], 0};
-    
-    Convert_Uint64_To_StringDec(&strNum, Number, 0);
-
-    UTIL_Printf( strNum.Data_a8 , strNum.Length_u16 );
-}
-
-
-
 uint8_t Convert_Hex_To_StringHex (uint8_t Hex)
 {
     return ((Hex /10) *16 + (Hex %10));
 }
 
 
-void UTIL_Printf (uint8_t *pData, uint16_t Length)
+void UTIL_Printf (uint8_t Level, uint8_t *pData, uint16_t Length)
 {
-    PrintDebug(&uart_debug, pData, Length, 1000);
+#if (VLEVEL_ENABLE == 1)
+    if (Level <= _VLEVEL_DEBUG)
+        HAL_UART_Transmit(&uart_debug, pData, Length, 1000);
+#endif
+}
+
+void UTIL_Printf_Str (uint8_t Level, const char *str)
+{
+    UTIL_Printf(Level, (uint8_t *) str, strlen(str));
 }
 
 
-void UTIL_Log (uint8_t *pData, uint16_t Length)
+void UTIL_Printf_Hex (uint8_t Level, uint8_t *pData, uint16_t Length)
+{
+    sData   sDataIn;
+    uint8_t aTEMP_OUT[2] = {0};
+    sData   sDataOut = {aTEMP_OUT, 0};
+    
+    for (uint16_t i = 0; i < Length; i++)
+    {
+        sDataIn.Data_a8 = pData + i;
+        sDataIn.Length_u16 = 1;
+        sDataOut.Length_u16 = 0;
+        
+        Convert_Hex_To_String_Hex(&sDataOut, &sDataIn); 
+    
+        UTIL_Printf(Level, sDataOut.Data_a8, sDataOut.Length_u16);
+    }
+}
+
+
+
+void UTIL_Log (uint8_t Level, uint8_t *pData, uint16_t Length)
 {
     //Print to 
-	UTIL_Printf ( pData, Length );
+	UTIL_Printf (Level, pData, Length );
     //Save to Flash
     if (pFunc_Log_To_Mem != NULL)
         pFunc_Log_To_Mem (pData, Length);
 }
+
+
+void UTIL_Log_Str (uint8_t Level, const char *str)
+{
+    //Print to 
+	UTIL_Printf (Level, (uint8_t *) str, strlen(str));
+    //Save to Flash
+    if (pFunc_Log_To_Mem != NULL)
+        pFunc_Log_To_Mem ((uint8_t *) str, strlen(str));
+}
+
+
+
+void UTIL_Printf_Dec (uint8_t Level, uint32_t Number)
+{
+    uint8_t Buff[10] = {0};
+    sData   strNum = {&Buff[0], 0};
+    
+    Convert_Uint64_To_StringDec(&strNum, Number, 0);
+
+    UTIL_Printf (Level, strNum.Data_a8 , strNum.Length_u16 );
+}
+
+
 

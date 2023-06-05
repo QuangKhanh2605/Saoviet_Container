@@ -216,3 +216,14 @@ uint8_t Save_Array_without_erase (uint32_t ADD, uint8_t* Buff, uint16_t length)
 
     return 1;
 }
+
+
+uint8_t OnchipFlash_Write_Buff (uint32_t Addr, uint8_t *pData, uint16_t Length)
+{
+    Length = Length + FLASH_BYTE_WRTIE - Length % FLASH_BYTE_WRTIE;
+    
+    if (OnchipFlashWriteData(Addr, pData, Length) != HAL_OK)
+        return 0;
+
+    return 1;
+}

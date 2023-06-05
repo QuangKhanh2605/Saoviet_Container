@@ -48,4 +48,7 @@ user_external_mem.pbi: \
   E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_internal_mem\user_internal_mem.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\onchipflash.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util/user_util.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_eventdriven\event_driven.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_queue\queue_p.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_internal_mem/user_mem_comm.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_mem\user_eeprom\cat24mxx.h

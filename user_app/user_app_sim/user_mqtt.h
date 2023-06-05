@@ -32,7 +32,6 @@
 
 #define NONE					0
 #define SUCCESS					1
-#define	ERROR					2
 
 #define MS_FAIL 				0xE2
 #define MS_CORRECT 				0xE1
@@ -51,10 +50,12 @@ typedef enum {
     DATA_TSVH_OPERA,
     DATA_INTAN_TSVH,
     
+    DATA_STATUS,
     DATA_FLASH_MEM,
 	DATA_PING,
 
-    SEND_EVENT_MESS,
+    DATA_EVENT,
+    DATA_GPS,
 
 	SEND_SIM_ID,
     SEND_RESPOND_SERVER_ACK,
@@ -168,6 +169,7 @@ uint8_t 	_mSEND_SIM_ID(int Kind_Send);
 void 		_mPayload_Sim_ID(sData *Payload);
 
 uint8_t     _mDATA_EVENT(int Kind_Send);
+uint8_t     _mDATA_GPS(int Kind_Send);
 
 uint8_t		_mSEND_RESPOND_SERVER(int Kind_Send);
 uint8_t     _mSEND_RESPOND_FROM_RF(int Kind_Send);
@@ -217,6 +219,8 @@ void        mRespond_Config_Server (uint8_t portNo, uint8_t *data, uint16_t leng
 uint8_t	    mUpdate_Split_FTP(sData *str_Receiv);
 uint8_t     _mSEND_HARDRS_MCU(int Kind_Send);
 uint8_t     _mSEND_ALARM_EMERGENCY(int Kind_Send);
+
+uint8_t     _mDATA_STATUS(int Kind_Send);
 
 
 #endif

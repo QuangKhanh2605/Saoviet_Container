@@ -87,7 +87,7 @@ void UTIL_LPM_EnterLowPower(void)
 		UTIL_PowerDriver.ExitSleepMode();
 	} else
 	{
-        UTIL_Printf ((uint8_t*) "u_lpm: go to stopmode\r\n", 23);
+        UTIL_Printf_Str (DBLEVEL_M, "u_lpm: go to stopmode\r\n" );
         
         if (sLPMFeatureHandler->LPM_Deinit_Peripheral != NULL)
             sLPMFeatureHandler->LPM_Deinit_Peripheral();

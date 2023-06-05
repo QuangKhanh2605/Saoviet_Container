@@ -45,36 +45,42 @@ user_app_sim.pbi: \
   E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_uart\user_uart.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\usart.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc/main.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_sim.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common\user_define.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_app_comm.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_eventdriven\event_driven.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim/user_sim_common.h \
-  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\main.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_util\onchipflash.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_util/user_util.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_ec200u\user_ec200u.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_sim_common.h \
-  E:\8.2023\3.GSM_Container\user_app\user_app_sim/user_mqtt.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_main\user_define.h \
   E:\8.2023\3.GSM_Container\user_app\user_app_sim\user_app_sim.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_temp_humi\user_app_temh.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_adc.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util/user_util.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\adc.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_mem\user_external_mem.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_internal_mem\user_internal_mem.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_mem\user_eeprom\cat24mxx.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_main/Customer_Config.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_main/user_app_main.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_main/user_modem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_mem\user_app_mem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_internal_mem\user_internal_mem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util\onchipflash.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_queue\queue_p.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_mem_comm.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_external_eeprom\user_external_eeprom.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_external_eeprom\user_cat24\cat24mxx.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_external_flash\user_external_flash.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_external_flash\external_flash_S25FL216K\S25FL216K.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\spi.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_modem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_define.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_log\user_log.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_lpm.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_main/user_modem_init.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_queue\queue_p.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_modem_init.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_at_serial\user_at_serial.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_time.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_timer\user_rtc.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_timer/user_timer.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdbool.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_obis_sv.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_sim.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim/user_sim_common.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\main.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_ec200u\user_ec200u.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_sim_common.h \
+  E:\8.2023\3.GSM_Container\user_app\user_app_sim/user_mqtt.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_string.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdlib.h \
-  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product_stdlib.h
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product_stdlib.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common\user_modem.h

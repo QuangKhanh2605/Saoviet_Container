@@ -57,7 +57,8 @@ typedef enum
     //Cmd TCP
     _SIM_TCP_IP_SIM,
     
-	_SIM_TCP_CLOSE,
+    _SIM_TCP_CLOSE_1,
+    _SIM_TCP_CLOSE_2,
 	_SIM_TCP_CONNECT_1,
     _SIM_TCP_CONNECT_2,
     
@@ -129,6 +130,8 @@ typedef enum
     _SIM_GPS_GET_LOCATION,
     
     _SIM_GPS_CFG_OUT_PORT,
+    _SIM_GPS_CFG_AUTO_RUN,
+    _SIM_GPS_DEL_CUR_DATA,
     _SIM_GPS_TURN_ON,
     _SIM_GPS_POSTION_INF,
     _SIM_GPS_TURN_OFF,
@@ -161,7 +164,7 @@ extern const sCommand_Sim_Struct aSimL506Step[];
 extern const sCommand_Sim_Struct aSimUrc[];
 
 extern uint8_t aSimStepBlockInit[13];
-extern uint8_t aSimStepBlockNework[8];
+extern uint8_t aSimStepBlockNework[10];
 #ifdef USING_TRANSPARENT_MODE
     extern uint8_t aSimStepBlockConnect[7];
     extern uint8_t aSIM_STEP_PUBLISH_FB[2];
@@ -181,6 +184,7 @@ extern uint8_t aSimStepBlockSMS[4];
 extern uint8_t aSimStepBlockFileClose[2];
 
 extern uint8_t aSimStepBlockLocation[2]; 
+extern uint8_t aSimStepBlockDelLocation[1];
 
 /*================== Function ==========================*/
 uint8_t     EC200U_Check_Step_Long_Timeout (uint8_t sim_step);

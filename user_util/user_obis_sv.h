@@ -59,9 +59,10 @@
 #define OBIS_WM_LEVEL_VAL_REAL      0x65
 
 
-
-
-
+#define OBIS_ENVI_TEMP_1            0x70
+#define OBIS_ENVI_TEMP_2            0x71
+#define OBIS_ENVI_HUMI_1            0x72
+#define OBIS_ENVI_HUMI_2            0x6E
 
 
 #endif

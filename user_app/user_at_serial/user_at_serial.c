@@ -80,6 +80,9 @@ const struct_CheckList_AT CheckList_AT_CONFIG[] =
         
         {_QUERY_GPS_LOC,        _fQUERY_GPS_LOC,			{(uint8_t*)"at+gps?",7}},
         
+        {_SET_LIST_ID_SLAVE,	_fSET_LIST_ID_SLAVE,	    {(uint8_t*)"at+slave=",9}},
+        {_QUERY_LIST_ID_SLAVE,	_fQUERY_LIST_ID_SLAVE,	    {(uint8_t*)"at+slave?",9}}, 
+        
         {_END_AT_CMD,	        NULL,	                    {(uint8_t*)"at+end",6}},
 };
 
@@ -90,7 +93,7 @@ uint8_t 		aDATA_CONFIG[128];
 
 void _fSET_DEV_SERIAL(sData *strRecei, uint16_t Pos)
 {
-    uint8_t i=0;
+    uint16_t i=0;
     uint8_t Fix = 0;
 
     if (PortConfig == 2)
@@ -372,7 +375,7 @@ void _fSET_DUTY_READ_DATA(sData *strRecei, uint16_t Pos)
             
         Save_Freq_Send_Data();
         //Set lai timer
-        AppCom_Set_Next_TxTimer();
+        AppComm_Set_Next_TxTimer();
         DCU_Respond (PortConfig, (uint8_t *)"\r\nOK", 4, 1); 
     } else
     	DCU_Respond(PortConfig, (uint8_t *)"\r\nERROR", 7, 0);
@@ -429,7 +432,7 @@ void _fSET_FREQ_ONLINE(sData *strRecei, uint16_t Pos)
     //Luu lai
     Save_Freq_Send_Data ();
     //Set lai timer
-    AppCom_Set_Next_TxTimer();
+    AppComm_Set_Next_TxTimer();
     DCU_Respond(PortConfig, (uint8_t *)"\r\nOK!", 5, 0);
 }
 
@@ -486,7 +489,7 @@ void _fSET_SAVE_BOX(sData *strRecei, uint16_t Pos)
     if (PortConfig == _AT_REQUEST_SERIAL)
     {
         DCU_Respond(PortConfig, (uint8_t *)"\r\nOK", 4, 1);
-        fevent_active(sEventAppMain, _EVENT_SAVE_BOX);
+        fevent_active(sEventAppComm, _EVENT_SAVE_BOX);
     } else
     {
     #ifdef USING_APP_SIM
@@ -859,7 +862,7 @@ void _fSET_RTC (sData *str_Receiv, uint16_t Pos)
             sRTCSet.min     = sRTC_temp.min;
             sRTCSet.sec     = sRTC_temp.sec;
             
-            fevent_active(sEventAppMain, _EVENT_SET_RTC);
+            fevent_active(sEventAppComm, _EVENT_SET_RTC);
             DCU_Respond(PortConfig, (uint8_t *)"OK", 2, 0);
 		}
 	}
@@ -904,17 +907,10 @@ void _fRESET_MODEM (sData *str_Receiv, uint16_t Pos)
 }
 
 void _fERASE_MEMORY (sData *str_Receiv, uint16_t Pos)
-{
-    #ifndef MEMORY_ON_FLASH
-        if (CAT24Mxx_Erase() == 0)
-        {
-            DCU_Respond(PortConfig, (uint8_t *)"OK", 2, 0);
-            Reset_Chip();
-            return;
-        }
-    #endif
-        
-    DCU_Respond(PortConfig, (uint8_t *)"ERROR", 5, 0);
+{     
+    fevent_enable( sEventAppMem, _EVENT_MEM_ERASE);
+
+    DCU_Respond(PortConfig, (uint8_t *)"PENDING", 7, 0);
 }
 
 
@@ -1119,108 +1115,107 @@ void _fQUERY_INDEX_LOG (sData *strRecei, uint16_t Pos)
 
 void _fTEST_LOG (sData *strRecei, uint16_t Pos)
 {
-    UTIL_Log((uint8_t*) "TEST LOG MODEM WM HOA BINH\r\n", 28);
+    UTIL_Log_Str (DBLEVEL_M, "TEST LOG MODEM WM HOA BINH\r\n" );
 }
 
 
 void _fQUERY_ALL_LOG (sData *strRecei, uint16_t Pos)
 {
-    sOldRec.StartIndex_u8 = sRecLog.IndexSave_u16; 
-    sOldRec.EndIndex_u8   = sRecLog.IndexSave_u16;
-    sOldRec.Type_u8       = _RQ_RECORD_LOG;
-        
-    sOldRec.Count_u8 = 0;
-    sOldRec.Kind_u8 = 1;
-    sOldRec.Port_u8 = PortConfig;
-    
-    fevent_enable(sEventAppMain, _EVENT_READ_OLD_RECORD);
-    DCU_Respond(PortConfig, (uint8_t *)"OK\r\n", 4, 0);
+//    sOldRec.StartIndex_u8 = sRecLog.IndexSave_u16; 
+//    sOldRec.EndIndex_u8   = sRecLog.IndexSave_u16;
+//    sOldRec.Type_u8       = _RQ_RECORD_LOG;
+//        
+//    sOldRec.Count_u8 = 0;
+//    sOldRec.Kind_u8 = 1;
+//    sOldRec.Port_u8 = PortConfig;
+//    
+//    fevent_enable(sEventAppComm, _EVENT_READ_OLD_RECORD);
+//    DCU_Respond(PortConfig, (uint8_t *)"OK\r\n", 4, 0);
 }
 
 void _fGET_LAST_LOG (sData *strRecei, uint16_t Pos)
 {
-    sOldRec.Type_u8  = _RQ_RECORD_LOG;
-    sOldRec.Kind_u8 = 0;
-    sOldRec.Port_u8 = PortConfig;
-    
-    fevent_enable(sEventAppMain, _EVENT_READ_OLD_RECORD);
-    DCU_Respond(PortConfig, (uint8_t *)"OK\r\n", 4, 0);
+//    sOldRec.Type_u8  = _RQ_RECORD_LOG;
+//    sOldRec.Kind_u8 = 0;
+//    sOldRec.Port_u8 = PortConfig;
+//    
+//    fevent_enable(sEventAppComm, _EVENT_READ_OLD_RECORD);
+//    DCU_Respond(PortConfig, (uint8_t *)"OK\r\n", 4, 0);
 }
 
 
 void _fGET_LAST_FOR_LOG (sData *strRecei, uint16_t Pos)
 {
-    _fExtract_Index_RQ_Old_Record (strRecei, Pos, &sRecLog, _RQ_RECORD_LOG);
+    AppMem_Set_Read_Resp_AT(_RQ_RECORD_LOG, SERIAL_Get_Num(strRecei, Pos));
 }
 
 
 void _fGET_LAST_FOR_OPERA (sData *strRecei, uint16_t Pos)
 {
-    _fExtract_Index_RQ_Old_Record (strRecei, Pos, &sRecTSVH, _RQ_RECORD_TSVH) ;
+    AppMem_Set_Read_Resp_AT(_RQ_RECORD_TSVH, SERIAL_Get_Num(strRecei, Pos));
 }
 
 
 
 void _fGET_LAST_FOR_EVENT (sData *strRecei, uint16_t Pos)
 {   
-    _fExtract_Index_RQ_Old_Record (strRecei, Pos, &sRecEvent, _RQ_RECORD_EVENT);
-
+    AppMem_Set_Read_Resp_AT(_RQ_RECORD_EVENT, SERIAL_Get_Num(strRecei, Pos));
 }
 
 
 void _fSET_CALIB_LEVEL (sData *strRecei, uint16_t Pos)
 {
-//#ifdef USING_APP_WM
-//    uint8_t Sign = 0;
-//    int16_t Value = 0;
-//    uint8_t Count = 0;
-//    uint8_t Result = TRUE;
-//    
-//    if (*(strRecei->Data_a8 + Pos++) == '-')
-//        Sign = 1;
-//    
-//    while (Pos < strRecei->Length_u16)
-//    {
-//        if ( (*(strRecei->Data_a8 + Pos) < 0x30) || (*(strRecei->Data_a8 + Pos) > 0x39) || (Count > 5) )
-//        {
-//            Result = FALSE;
-//            break;
-//        }
-//        //Tinh gia tri
-//        Value = Value * 10 + *(strRecei->Data_a8 + Pos) - 0x30;
-//        Count++;
-//        Pos++;
-//    }
-//    
-//    if (Result == TRUE)
-//    {
-//        if (Sign == 1)
-//            sWmVar.ZeroPointCalib_i16 = 0 - Value;
-//        else
-//            sWmVar.ZeroPointCalib_i16 = Value;
-//        
-//        AppWm_Save_Level_Calib ();
-//        
-//       DCU_Respond(PortConfig, (uint8_t *)"OK\r\n", 4, 0);
-//    } else
-//        DCU_Respond(PortConfig,(uint8_t *)"ERROR", 5, 0);        
-//#endif
+#ifdef USING_APP_WM
+    uint8_t Sign = 0;
+    int16_t Value = 0;
+    uint8_t Count = 0;
+    uint8_t Result = TRUE;
+    
+    if (*(strRecei->Data_a8 + Pos++) == '-')
+        Sign = 1;
+    
+    while (Pos < strRecei->Length_u16)
+    {
+        if ( (*(strRecei->Data_a8 + Pos) < 0x30) || (*(strRecei->Data_a8 + Pos) > 0x39) || (Count > 5) )
+        {
+            Result = FALSE;
+            break;
+        }
+        //Tinh gia tri
+        Value = Value * 10 + *(strRecei->Data_a8 + Pos) - 0x30;
+        Count++;
+        Pos++;
+    }
+    
+    if (Result == TRUE)
+    {
+        if (Sign == 1)
+            sWmVar.ZeroPointCalib_i16 = 0 - Value;
+        else
+            sWmVar.ZeroPointCalib_i16 = Value;
+        
+        AppWm_Save_Level_Calib ();
+        
+       DCU_Respond(PortConfig, (uint8_t *)"OK\r\n", 4, 0);
+    } else
+        DCU_Respond(PortConfig,(uint8_t *)"ERROR", 5, 0);        
+#endif
     DCU_Respond(PortConfig,(uint8_t *)"NOT SUPPORT!", 12, 0);   
 }
 
 
 void _fQUERY_CALIB_LEVEL (sData *strRecei, uint16_t Pos)
 {
-//#ifdef USING_APP_WM
-//    uint8_t aTEMP[8] = {0};
-//    sData StrIndex = {&aTEMP[0], 0};
-//    
-//    Convert_Int64_To_StringDec(&StrIndex, sWmVar.ZeroPointCalib_i16, 0);
-//    
-//    DCU_Respond(PortConfig, StrIndex.Data_a8, StrIndex.Length_u16, 0);
-//#else
+#ifdef USING_APP_WM
+    uint8_t aTEMP[8] = {0};
+    sData StrIndex = {&aTEMP[0], 0};
+    
+    Convert_Int64_To_StringDec(&StrIndex, sWmVar.ZeroPointCalib_i16, 0);
+    
+    DCU_Respond(PortConfig, StrIndex.Data_a8, StrIndex.Length_u16, 0);
+#else
     DCU_Respond(PortConfig,(uint8_t *)"NOT SUPPORT!", 12, 0);    
-//#endif
+#endif
 }
 
 
@@ -1304,53 +1299,6 @@ void _fQUERY_GPS_LOC (sData *strRecei, uint16_t Pos)
 #endif
 #endif
 }
-
-void _fExtract_Index_RQ_Old_Record (sData *strRecei, uint16_t Pos, StructManageRecordFlash *sRec, uint8_t TypeRQ)
-{
-    uint16_t    Value = 0;
-    uint8_t     temp = 0,  count = 0;
-    
-    while (Pos < strRecei->Length_u16)
-    {
-        if (*(strRecei->Data_a8 + Pos++) == '(')
-        {
-            Value = 0;
-            count = 0;
-            temp = *(strRecei->Data_a8 + Pos++);
-            while ((temp >= 0x30) && (temp <= 0x39))
-            {
-                Value = Value * 10 + (temp - 0x30);
-                count++;
-                temp = *(strRecei->Data_a8 + Pos++);
-                if ((count >= 8) || (Pos > strRecei->Length_u16))
-                    break;
-            }
-            
-            break;
-        }     
-    }
-    
-    if ((Value != 0) && (Value < sRec->MaxRecord_u16)) 
-    {
-        if (sRec->IndexSave_u16 >= Value)
-            sOldRec.StartIndex_u8 = sRec->IndexSave_u16 - Value;
-        else
-            sOldRec.StartIndex_u8 = (sRec->MaxRecord_u16 + sRec->IndexSave_u16 - Value);
-          
-        sOldRec.EndIndex_u8   = sRec->IndexSave_u16;
-        sOldRec.Count_u8 = 0;
-        sOldRec.Kind_u8 = 1;
-        sOldRec.Type_u8 = TypeRQ;
-        sOldRec.Port_u8 = PortConfig;
-        
-        fevent_enable(sEventAppMain, _EVENT_READ_OLD_RECORD);
-        
-        DCU_Respond(PortConfig, (uint8_t *)"OK\r\n", 4, 0);
-    } else
-        DCU_Respond(PortConfig,(uint8_t *)"ERROR", 5, 0);
-}
-
-
 
 
 /*===================== Func Handler =========================*/
@@ -1448,5 +1396,109 @@ uint8_t Check_AT_User(sData *StrUartRecei, uint8_t Type)
 	return 0;
 }
 
+
+
+
+uint16_t SERIAL_Get_Num (sData *strRecei, uint16_t Pos)
+{
+    uint16_t    Value = 0;
+    uint8_t     temp = 0,  count = 0;
+    
+    while (Pos < strRecei->Length_u16)
+    {
+        if (*(strRecei->Data_a8 + Pos++) == '(')
+        {
+            Value = 0;
+            count = 0;
+            temp = *(strRecei->Data_a8 + Pos++);
+            while ((temp >= 0x30) && (temp <= 0x39))
+            {
+                Value = Value * 10 + (temp - 0x30);
+                count++;
+                temp = *(strRecei->Data_a8 + Pos++);
+                if ((count >= 8) || (Pos > strRecei->Length_u16))
+                    break;
+            }
+            
+            break;
+        }     
+    }
+    
+    return Value;
+}
+      
+
+
+
+
+void _fSET_LIST_ID_SLAVE (sData *str_Receiv, uint16_t Pos)
+{
+    uint8_t Temp = 0;
+    uint8_t count = Pos;
+    uint8_t i = 0;
+    
+    //check xem co chu khong. neu co chu thi bao error
+    for (i = Pos; i < str_Receiv->Length_u16; i++)
+    {
+        if((*(str_Receiv->Data_a8 + i) < 0x30) || (*(str_Receiv->Data_a8 + i) > 0x39))
+        {
+			DCU_Respond(PortConfig, (uint8_t *)"ERROR", 5, 0);
+			return;
+        }
+    }
+    //bat dau lay data
+    Temp = (*(str_Receiv->Data_a8 + count) - 0x30) * 10 + *(str_Receiv->Data_a8 + count + 1) - 0x30;
+    count += 2;
+    
+    if (Temp > 0x70) 
+    {
+        DCU_Respond(PortConfig, (uint8_t *)"ERROR", 5, 0);
+        return;
+    }
+    
+    if ((str_Receiv->Length_u16 - count) == (2 * Temp))
+    {
+        if (Temp >= MAX_SLAVE)
+        {
+            Temp = MAX_SLAVE;
+        }
+        //Get data
+        sTempHumi.NumSlave_u8 = Temp;
+        
+        for (i = 0; i < sTempHumi.NumSlave_u8; i++)
+        {
+            sTempHumi.aSlaveID[i] = (*(str_Receiv->Data_a8 + count) - 0x30) * 10 + *(str_Receiv->Data_a8 + count + 1) - 0x30;
+            count += 2;
+        }
+        
+        AppTemH_Save_Slave_ID();
+        
+        DCU_Respond(PortConfig, (uint8_t *)"OK", 2, 0);
+    } else
+    {
+        DCU_Respond(PortConfig, (uint8_t *)"ERROR", 5, 0);
+    }
+}
+
+
+
+void _fQUERY_LIST_ID_SLAVE (sData *str_Receiv, uint16_t Pos)
+{
+    uint8_t length = 0;
+    uint8_t i = 0;
+    uint8_t aTEMP[64] = {0};
+    
+    aTEMP[length++] = sTempHumi.NumSlave_u8 / 10 + 0x30;
+    aTEMP[length++] = sTempHumi.NumSlave_u8 % 10 + 0x30;
+    aTEMP[length++] = ':';
+    
+    for(i = 0; i < sTempHumi.NumSlave_u8; i++)
+    {
+        aTEMP[length++] = sTempHumi.aSlaveID[i]/10 + 0x30;
+        aTEMP[length++] = sTempHumi.aSlaveID[i]%10 + 0x30;
+    }
+    
+    DCU_Respond(PortConfig, &aTEMP[0], length, 0);
+}
 
 

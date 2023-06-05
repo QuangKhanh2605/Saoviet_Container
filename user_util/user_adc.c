@@ -79,7 +79,6 @@ void STM32_MX_ADC1_Init(void)
     {
         Error_Handler();
     }
-    
 #endif
   /* USER CODE BEGIN ADC1_Init 2 */
 
@@ -96,22 +95,33 @@ uint16_t HW_AdcReadChannel (uint32_t Channel)
 
 	STM32_MX_ADC1_Init();
 
-    #if defined (STM32L433xx) 
-        /*calibrate ADC if any calibraiton hardware*/
-        HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED );           
-        /*
-            * Configure Regular Channel 
-        */
+    #if defined (STM32L433xx) || defined (STM32L151xC) 
+  
+        #if defined (STM32L433xx)
+            /*calibrate ADC if any calibraiton hardware*/
+            HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED );           
+            /*
+                * Configure Regular Channel 
+            */
+        #endif
         sConfig.Channel = Channel;
         sConfig.Rank = ADC_REGULAR_RANK_1;
-        sConfig.SamplingTime = ADC_SAMPLETIME_640CYCLES_5;
-        sConfig.SingleDiff = ADC_SINGLE_ENDED;
-        sConfig.OffsetNumber = ADC_OFFSET_NONE;
-        sConfig.Offset = 0;
-        if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+        #if defined (STM32L433xx)
+            sConfig.SamplingTime = ADC_SAMPLETIME_640CYCLES_5;
+        
+            sConfig.SingleDiff = ADC_SINGLE_ENDED;
+            sConfig.OffsetNumber = ADC_OFFSET_NONE;
+            sConfig.Offset = 0;
+        #endif
+ 
+        #if defined (STM32L151xC)
+            sConfig.SamplingTime = ADC_SAMPLETIME_384CYCLES;
+        #endif
+        if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
         {
             Error_Handler();
-        }       
+        }
+  
         /* Start the conversion process */
         HAL_ADC_Start(&hadc1);
           
@@ -121,10 +131,12 @@ uint16_t HW_AdcReadChannel (uint32_t Channel)
         adcData = HAL_ADC_GetValue(&hadc1);
         
         HAL_ADC_Stop (&hadc1);
-        ADC_Disable( &hadc1);
+        #if defined (STM32L433xx)   
+            ADC_Disable( &hadc1);
+        #endif
         
     #endif
-       
+               
     #if defined (STM32L072xx) 
         
          /* wait the the Vrefint used by adc is set */
@@ -155,7 +167,7 @@ uint16_t HW_AdcReadChannel (uint32_t Channel)
         /* Get the converted value of regular channel */
         adcData = HAL_ADC_GetValue ( &hadc1);
 
-         HAL_ADC_DeInit(&hadc1);
+        HAL_ADC_DeInit(&hadc1);
 
         __HAL_RCC_ADC1_CLK_DISABLE() ;
     #endif

@@ -32,6 +32,7 @@ void                OnchipFlashReadData (uint32_t address,uint8_t *destination, 
 /*=========================Function xu ly onchip flash DCU===========*/
 uint8_t             Save_Array(uint32_t ADD, uint8_t* Buff, uint16_t length);
 uint8_t             Save_Array_without_erase (uint32_t ADD, uint8_t* Buff, uint16_t length);
+uint8_t             OnchipFlash_Write_Buff (uint32_t Addr, uint8_t *pData, uint16_t Length);
 
 
 #endif /*  */

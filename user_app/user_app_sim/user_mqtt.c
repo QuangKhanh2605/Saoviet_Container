@@ -17,7 +17,7 @@
 
 #include "user_string.h"
 #include "cat24mxx.h"
-
+#include "user_modem.h"
 
 
 /*======================== Structs var======================*/
@@ -32,11 +32,13 @@ const struct_MARK_TYPE_Message_SEND     sMark_MessageSend_Type[] =
     {DATA_TSVH_OPERA,				    _mDATA_TSVH_PACKET_OPERA,			{(uint8_t*)"Opera",5}}, //
     {DATA_INTAN_TSVH,				    _mDATA_INTAN_TSVH,				    {(uint8_t*)"Intan",5}}, //
 
+    {DATA_STATUS,				        _mDATA_STATUS,				        {(uint8_t*)"Statu",5}}, //
     {DATA_FLASH_MEM,					_mDATA_ON_FLASH,				    {(uint8_t*)"Debug",5}}, //
     {DATA_PING,							_mDATA_PING,						{(uint8_t*)"mPing",5}}, //
 
-    {SEND_EVENT_MESS,					_mDATA_EVENT,				        {(uint8_t*)"Event",5}}, //
-
+    {DATA_EVENT,					    _mDATA_EVENT,				        {(uint8_t*)"Event",5}}, //
+    {DATA_GPS,					        _mDATA_GPS,				            {(uint8_t*)"Gpsda",5}}, //
+    
     {SEND_SIM_ID,					    _mSEND_SIM_ID,					    {(uint8_t*)"SimID",5}},
     {SEND_RESPOND_SERVER_ACK,	    	_mSEND_RESPOND_SERVER_ACK,			{(uint8_t*)"sCoFi",5}},
     {SEND_SAVE_BOX_FAIL,				_mSEND_SAVE_BOX_FAIL,				{(uint8_t*)"sCoFi",5}},
@@ -160,7 +162,7 @@ void mSend_Packet_MQTT(struct_MQTT *mqtt)
 {
     //Dong goi Ban tin connect
 #ifdef USING_TRANSPARENT_MODE
-    HAL_UART_Transmit(&uart_debug, (uint8_t*)"\r\n Message transfer: \r\n", 23, 1000);
+    UTIL_Printf_Str( DBLEVEL_M, "\r\n Message transfer: \r\n" );
     Sim_Common_Send_AT_Cmd(&uart_sim, mqtt->str.Data_a8, mqtt->str.Length_u16, 1000);
 #endif
 }
@@ -273,113 +275,36 @@ uint8_t _mDATA_HANDSHAKE(int Kind_Send)
 
 uint8_t _mDATA_TSVH_PACKET(int Kind_Send)
 {
-    uint16_t    i = 0;
-    uint8_t     IndexMess = 0;
-    uint16_t    IndexRead = 0;
-    uint8_t     TempCrC = 0;
-
-    //Ðoc record tu Flash ra-> Dong goi du lieu vao sMQTT.sPayload
+    //Get Data Payload
     sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
     sMQTT.sPayload.Length_u16 = 0;
 
-	sRecTSVH.CountMessPacket_u16 = 0;
-    while (sRecTSVH.CountMessPacket_u16 < MAX_MESS_IN_PACKET)
+    for (uint16_t i = 0; i < sAppSimVar.sDataFlashSim.Length_u16; i++)
     {
-        IndexRead = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
-        if (IndexRead == sRecTSVH.IndexSave_u16)
-            break;
-    #ifdef MEMORY_ON_FLASH
-        if (Flash_Read_Record ((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)
-            IndexMess++;
-    #else
-        if (ExMem_Read_Record((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)
-            IndexMess++;
-    #endif
-        sRecTSVH.CountMessPacket_u16++;
+        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
     }
-
-    if (IndexMess != 0)  //neu có ban tin duoc dong goi thi moi add crc vao
-    {
-        //crc tat ca cac byte.
-        sMQTT.sPayload.Length_u16++;
-        for (i = 0; i < (sMQTT.sPayload.Length_u16 - 1); i++)
-            TempCrC ^= *(sMQTT.sPayload.Data_a8 + i);
-
-        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16 - 1) = TempCrC;
-
-        mData_MQTT(Kind_Send);
-
-        return 1;
-    }
-    //Neu cac ban tin doc ra loi -> Cong index send lên (De bo qua) -> Tiep tuc gưi tiep
-    if (sRecTSVH.CountMessPacket_u16 != 0)
-    {
-        sRecTSVH.IndexSend_u16 = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
-
-    #ifdef MEMORY_ON_FLASH
-        Flash_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-    #else
-        ExMem_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-    #endif
-
-        sRecTSVH.CountMessPacket_u16 = 0;
-    }
-
-    return 0;
+    
+    mData_MQTT(Kind_Send);
+    
+    return 1;
 }
 
 
 
 uint8_t _mDATA_TSVH_PACKET_OPERA (int Kind_Send)
-{
-    uint8_t     IndexMess = 0;
-    uint16_t    IndexRead = 0;
-
-    //Ðoc record tu Flash ra-> Dong goi du lieu vao sMQTT.sPayload
+{   
+    //Get Data Payload
     sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
     sMQTT.sPayload.Length_u16 = 0;
 
-	sRecTSVH.CountMessPacket_u16 = 0;
-    while (sRecTSVH.CountMessPacket_u16 < MAX_MESS_IN_PACKET)
+    for (uint16_t i = 0; i < sAppSimVar.sDataFlashSim.Length_u16; i++)
     {
-        IndexRead = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
-        if (IndexRead == sRecTSVH.IndexSave_u16)
-            break;
-
-    #ifdef MEMORY_ON_FLASH
-        if (Flash_Read_Record_Without_Index ((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload) == 1)  //ban tin doc ra loi bo qua.
-            IndexMess++;
-    #else
-        if (ExMem_Read_Record_Without_Index((uint32_t)(sRecTSVH.AddStart_u32 + sRecTSVH.SizeRecord_u16 * IndexRead), &sMQTT.sPayload ) == 1)
-            IndexMess++;
-    #endif
-
-        sRecTSVH.CountMessPacket_u16++;
-        break;  //Su dung topic OPERA thi gui nhu nay
+        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
     }
-
-    //neu có ban tin duoc dong goi thi moi add crc vao
-    if (IndexMess != 0)
-    {
-        mData_MQTT(Kind_Send);
-
-        return 1;
-    }
-    //Neu cac ban tin doc ra loi -> Cong index send lên (De bo qua) -> Tiep tuc gưi tiep
-    if (sRecTSVH.CountMessPacket_u16 != 0)
-    {
-        sRecTSVH.IndexSend_u16 = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
-
-    #ifdef MEMORY_ON_FLASH
-        Flash_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-    #else
-        ExMem_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-    #endif
-
-        sRecTSVH.CountMessPacket_u16 = 0;
-    }
-
-    return 0;
+    
+    mData_MQTT(Kind_Send);
+    
+    return 1;
 }
 
 
@@ -391,6 +316,10 @@ uint8_t _mDATA_INTAN_TSVH(int Kind_Send)
 
 #if defined(USING_APP_WM) || defined (USING_APP_EMET)
     sMQTT.sPayload.Length_u16 = Modem_Packet_TSVH (sMQTT.sPayload.Data_a8);
+#endif
+   
+#if defined(USING_APP_TEMH) 
+    sMQTT.sPayload.Length_u16 = AppTemH_Packet_TSVH (sMQTT.sPayload.Data_a8);
 #endif
     
 #if defined(USING_APP_LORA)  
@@ -406,6 +335,8 @@ uint8_t _mDATA_INTAN_TSVH(int Kind_Send)
 
 uint8_t _mDATA_ON_FLASH(int Kind_Send)
 {
+    
+    
     return 1;
 }
 
@@ -450,7 +381,7 @@ uint8_t _mSEND_HARDRS_MCU(int Kind_Send)
 
 uint8_t _mSEND_ALARM_EMERGENCY(int Kind_Send)
 {
-    uint8_t i = 0;
+    uint16_t i = 0;
 
     sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
 	sMQTT.sPayload.Length_u16 = MAX_LENGTH_MQTT;
@@ -480,63 +411,53 @@ uint8_t _mDATA_PING(int Kind_Send)
 }
 
 
-uint8_t _mDATA_EVENT(int Kind_Send)
-{
-    uint16_t    i = 0;
-    uint8_t     IndexMess = 0;
-    uint16_t    IndexRead = 0;
-    uint8_t     TempCrC = 0;
+uint8_t _mDATA_STATUS(int Kind_Send)
+{   
+    sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+	sMQTT.sPayload.Length_u16 = MAX_LENGTH_MQTT;
+    
+    Reset_Buff(&sMQTT.sPayload);
+       
+    return 0;
+}
 
-    //Ðoc record tu Flash ra-> Dong goi du lieu vao sMQTT.sPayload
+
+
+uint8_t _mDATA_EVENT(int Kind_Send)
+{        
+    //Get Data Payload
     sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
     sMQTT.sPayload.Length_u16 = 0;
 
-	sRecEvent.CountMessPacket_u16 = 0;
-    while (sRecEvent.CountMessPacket_u16 < MAX_MESS_IN_PACKET)
+    for (uint16_t i = 0; i < sAppSimVar.sDataFlashSim.Length_u16; i++)
     {
-        IndexRead = (sRecEvent.IndexSend_u16 + sRecEvent.CountMessPacket_u16) % sRecEvent.MaxRecord_u16;
-        if (IndexRead == sRecEvent.IndexSave_u16)
-            break;
-    #ifdef MEMORY_ON_FLASH
-        if (Flash_Read_Record ((uint32_t)(sRecEvent.AddStart_u32 + sRecEvent.SizeRecord_u16* IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)
-            IndexMess++;
-    #else
-        if (ExMem_Read_Record((uint32_t)(sRecEvent.AddStart_u32 + sRecEvent.SizeRecord_u16 * IndexRead), &sMQTT.sPayload, IndexMess + 1) == 1)
-            IndexMess++;
-    #endif
-        sRecEvent.CountMessPacket_u16++;
+        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
     }
-
-    if (IndexMess != 0)  //neu có ban tin duoc dong goi thi moi add crc vao
-    {
-        //crc tat ca cac byte.
-        sMQTT.sPayload.Length_u16++;
-        for (i = 0; i < (sMQTT.sPayload.Length_u16 - 1); i++)
-            TempCrC ^= *(sMQTT.sPayload.Data_a8 + i);
-
-        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16 - 1) = TempCrC;
-
-        mData_MQTT(Kind_Send);
-
-        return 1;
-    }
-
-    //Neu cac ban tin doc ra loi -> Cong index send lên (De bo qua) -> Tiep tuc gưi tiep
-    if (sRecEvent.CountMessPacket_u16 != 0)
-    {
-        sRecEvent.IndexSend_u16 = (sRecEvent.IndexSend_u16 + sRecEvent.CountMessPacket_u16) % sRecEvent.MaxRecord_u16;
-
-    #ifdef MEMORY_ON_FLASH
-        Flash_Save_Index(sRecEvent.AddIndexSend_u32, sRecEvent.IndexSend_u16);
-    #else
-        ExMem_Save_Index(sRecEvent.AddIndexSend_u32, sRecEvent.IndexSend_u16);
-    #endif
-
-        sRecEvent.CountMessPacket_u16 = 0;
-    }
-
-    return 0;
+    
+    mData_MQTT(Kind_Send);
+    
+    return 1;
 }
+
+
+uint8_t _mDATA_GPS(int Kind_Send)
+{        
+    //Get Data Payload
+    sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
+    sMQTT.sPayload.Length_u16 = 0;
+
+    for (uint16_t i = 0; i < sAppSimVar.sDataFlashSim.Length_u16; i++)
+    {
+        *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
+    }
+    
+    mData_MQTT(Kind_Send);
+
+    return 1;
+}
+
+
+
 
 
 
@@ -671,7 +592,7 @@ uint8_t _mSEND_RESPOND_FROM_RF(int Kind_Send)
 
 uint8_t _mSEND_RESPOND_SERVER_ACK(int Kind_Send)
 {
-    uint8_t i = 0;
+    uint16_t i = 0;
 
     sMQTT.sPayload.Data_a8 = aPAYLOAD_MQTT;
 	sMQTT.sPayload.Length_u16 = MAX_LENGTH_MQTT;
@@ -787,7 +708,7 @@ uint8_t _mSEND_UPDATE_FIRM_OK(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
 	mPayload_Load_MesErr(&strFirmSuccess);
 
-    UTIL_Log(strFirmSuccess.Data_a8, strFirmSuccess.Length_u16);
+    UTIL_Log(DBLEVEL_M, strFirmSuccess.Data_a8, strFirmSuccess.Length_u16);
 
 #ifdef USING_APP_WM
     sData strWaitPulse = {(uint8_t*)" - Wait increase 5 pulse", 24};
@@ -836,7 +757,7 @@ uint8_t _mSEND_UPDATE_FIRM_FAIL(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
 	mPayload_Load_MesErr(&strFirmFail);
 
-    UTIL_Log(strFirmFail.Data_a8, strFirmFail.Length_u16);
+    UTIL_Log(DBLEVEL_M, strFirmFail.Data_a8, strFirmFail.Length_u16);
 
 #ifdef USING_APP_WM
     sData strWaitPulse = {(uint8_t*)" - Wait increase 5 pulse", 24};
@@ -912,7 +833,7 @@ __weak void _rREQUEST_SETTING(sData *str_Receiv, int16_t Pos)
                 //Luu lai
                 Save_Freq_Send_Data ();
                 DCU_Respond (_AT_REQUEST_SERVER, (uint8_t *)"\r\nOK", 2, 1);
-                AppCom_Set_Next_TxTimer();
+                AppComm_Set_Next_TxTimer();
                 break;
             case 0x02:   //Lenh Reset so xung ve 0
                 PosFix++;
@@ -974,7 +895,7 @@ void _rUPDATE_TIME_SERVER(sData *str_Receiv,int16_t Pos)
 	    sRTCSet.min 		= sRTC_temp.min;
 	    sRTCSet.sec 		= sRTC_temp.sec;
 
-		fevent_active(sEventAppMain, _EVENT_SET_RTC);
+		fevent_active(sEventAppComm, _EVENT_SET_RTC);
 
 		sMQTT.aMARK_MESS_PENDING[SEND_SERVER_TIME_OK] = 1;
 	} else
@@ -996,14 +917,14 @@ void _rRESET_DATA(sData *str_Receiv,int16_t Pos)
 
 void _rREQ_AT_CMD(sData *str_Receiv,int16_t Pos)
 {    
-    PrintDebug(&uart_debug, (uint8_t*) "u_mqtt: request at from server\r\n", 32, 1000);
+    UTIL_Printf_Str( DBLEVEL_M, "u_mqtt: request at from server\r\n" );
     
     Check_AT_User(str_Receiv, _AT_REQUEST_SERVER);  
 }
 
 void _rREQ_AT_TO_RF(sData *str_Receiv,int16_t Pos)
 {
-    PrintDebug(&uart_debug, (uint8_t*) "u_mqtt: request at to rf\r\n", 26, 1000);
+    UTIL_Printf_Str( DBLEVEL_M, "u_mqtt: request at to rf\r\n" );
     
     Check_AT_User(str_Receiv, _AT_REQUEST_LORA);  
 }

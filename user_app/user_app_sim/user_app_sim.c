@@ -4,7 +4,7 @@
 #include "user_define.h"
 
 #include "user_string.h"
-
+#include "user_modem.h"
 
 
 /*================ Var struct =================*/  
@@ -12,6 +12,8 @@ sEvent_struct sEventAppSim[] =
 {
     { _EVENT_SIM_SEND_MESS,  		0, 0, 2000,     _Cb_Event_Sim_Send_Mess },  
     { _EVENT_SIM_SEND_PING,  		0, 0, 30000,    _Cb_Event_Sim_Send_Ping },
+    { _EVENT_SIM_REQ_GPS,  		    1, 0, 5000,     _Cb_Event_Sim_Req_GPS },
+    { _EVENT_SIM_GET_GPS,  		    1, 0, 100,      _Cb_Event_Sim_Get_GPS },
 };
 
   
@@ -25,6 +27,18 @@ sFuncCallBackModem  sModemCallBackToSimHandler =
     .pSim_Process_Sms           = AppSim_Process_Sms,
     .pSim_Get_Fw_Version        = AppSim_Get_Firmware_Version,
 };
+
+
+uint8_t aDATA_FLASH_SIM[256];
+uint8_t aDATA_GPS[256];
+
+sAppSimVariable sAppSimVar = 
+{
+    .sDataFlashSim = {&aDATA_FLASH_SIM[0], 0},
+    .sDataGPS      = {&aDATA_GPS[0], 0},
+};
+
+
 
 
 /*================ Func =================*/
@@ -55,6 +69,110 @@ uint8_t _Cb_Event_Sim_Send_Ping (uint8_t event)
     return 1;
 }
 
+
+/*
+    Cu 5s vao day de push at get GPS
+*/
+uint8_t _Cb_Event_Sim_Req_GPS (uint8_t event)
+{
+    /*
+        - Qua Init Module sim
+        - Neu trong queue con nhieu step (Full) -> bo qua
+    */
+    
+    if (sSimCommon.GroupStepID_u8 > _GR_SETTING)
+    {
+        if (qGet_Number_Items(&qSimStep) < (SIM_MAX_ITEM_QUEUE - 5))
+        {
+            sAppSimVar.IsGetGPS_u8 = false;
+            //Default struct value GPS
+            Sim_Defaul_Struct_GPS();  
+            //Push lenh lay toa do
+            fPushBlockSimStepToQueue(aSimStepBlockLocation, sizeof(aSimStepBlockLocation)); 
+        }
+    }
+    
+    fevent_enable(sEventAppSim, event);
+
+    return 1;
+}
+
+
+
+uint8_t _Cb_Event_Sim_Get_GPS (uint8_t event)
+{
+    static uint8_t MarkGPSError_u8 = false;
+    
+    //At gps ok + Chua lay du lieu
+    if ( (sAppSimVar.IsGetGPS_u8 == false) && (sSimCommon.sGPS.Status_u8 != false) && (sRTC.year > 20) )
+    {
+        sAppSimVar.IsGetGPS_u8 = true;  
+        
+        //neu tiep tuc gps error bo qua dong goi
+        if ( (sSimCommon.sGPS.Status_u8 == error) && (MarkGPSError_u8 == true) )
+        {
+            UTIL_Printf_Str( DBLEVEL_M, "u_app_sim: gps error continue!\r\n" );
+            
+            fevent_enable(sEventAppSim, event);
+            return 1;
+        }
+        
+        //Copy to Buffer data
+        if (sAppSimVar.sDataGPS.Length_u16 == 0)
+        {
+            //Them Stime vao truoc
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = OBIS_TIME_DEVICE;   // sTime
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = 0x06;
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.year;
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.month;
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.date;
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.hour;
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.min;
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.sec;
+        } else
+        {
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ';';
+        }
+
+        //Neu status = true, packet data or status = error packet 0,0 util have data again
+        if (sSimCommon.sGPS.Status_u8 == true)
+        {
+            MarkGPSError_u8 = false;
+            
+            for (uint16_t i = 0; i < sSimCommon.sGPS.LengData_u8; i++)
+            {
+                *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sSimCommon.sGPS.aPOS_INFOR[i];  
+                
+                if (sAppSimVar.sDataGPS.Length_u16 >= 250)
+                    break;
+            }
+        } else if (MarkGPSError_u8 == false)
+        {
+            MarkGPSError_u8 = true;
+            
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = '0';
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ',';
+            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = '0';
+        }
+        
+        //Kiem tra xem da day buff chua: -> Luu vao -> gui di
+        if (sAppSimVar.sDataGPS.Length_u16 > 200)
+        {
+            //Send to queue write 
+            AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_GPS_A, sAppSimVar.sDataGPS.Data_a8, sAppSimVar.sDataGPS.Length_u16);
+            //Memset data
+            sAppSimVar.sDataGPS.Length_u16 = 0;
+        }
+    }
+  
+    fevent_enable(sEventAppSim, event);
+
+    return 1;
+}
+
+
+
+
 /*
     
 */
@@ -69,26 +187,18 @@ uint8_t _Cb_Event_Sim_Send_Mess (uint8_t event)
         case _POWER_INIT:   
             break;
         case _POWER_CONN_MQTT:
-            if (sModem.IsReqGetLocation_u8 == true)
-            {
-                sModem.IsReqGetLocation_u8 = false;
-                //Default struct value GPS
-                Sim_Defaul_Struct_GPS();                
-                //Push lenh lay toa do
-                fPushBlockSimStepToQueue(aSimStepBlockLocation, sizeof(aSimStepBlockLocation)); 
-            }
             if (AppSim_Send_Mess () == 1)  //Co ban tin
             {
                 //Have Mess need Send: Enable even again + Unmark Send PING
                 if (sModem.ModeSimPower_u8 == _POWER_MODE_ONLINE)
                     sEventAppSim[_EVENT_SIM_SEND_PING].e_status = 0;
                 
-                sEventAppSim[_EVENT_SIM_SEND_MESS].e_period = 2000;
-                fevent_enable(sEventAppSim, _EVENT_SIM_SEND_MESS);
+                sEventAppSim[event].e_period = 2000;
+                fevent_enable(sEventAppSim, event);
                 
             } else
             {
-                sEventAppSim[_EVENT_SIM_SEND_MESS].e_period = 10;
+                sEventAppSim[event].e_period = 10;
                 //Neu Online: enable Ping  | Enable event Power SIM
                 if (sModem.ModeSimPower_u8 == _POWER_MODE_ONLINE)
                 {
@@ -96,7 +206,7 @@ uint8_t _Cb_Event_Sim_Send_Mess (uint8_t event)
                     if (sEventAppSim[_EVENT_SIM_SEND_PING].e_status == 0)
                         fevent_enable(sEventAppSim, _EVENT_SIM_SEND_PING);
                     
-                    fevent_enable(sEventAppSim, _EVENT_SIM_SEND_MESS);
+                    fevent_enable(sEventAppSim, event);
                 } else
                 {
                     //Irq External to config by server
@@ -106,7 +216,7 @@ uint8_t _Cb_Event_Sim_Send_Mess (uint8_t event)
                         if (sEventAppSim[_EVENT_SIM_SEND_PING].e_status == 0)
                             fevent_enable(sEventAppSim, _EVENT_SIM_SEND_PING);
                         
-                        fevent_enable(sEventAppSim, _EVENT_SIM_SEND_MESS);
+                        fevent_enable(sEventAppSim, event);
                     } else
                     {
                         //POW off module SIM -> go to lowpower
@@ -131,7 +241,6 @@ uint8_t _Cb_Event_Sim_Send_Mess (uint8_t event)
           
     return 1;
 }
-
 
 
 /*============== Function Handler ====================*/   
@@ -235,6 +344,9 @@ uint8_t AppSim_Process_AT_Event (uint8_t Type)
         case _SIM_COMM_EVENT_GET_STIME:  
             _CbAppSim_Recv_sTime (sSimInfor.sTime);
             break;
+        case _SIM_COMM_EVENT_GPS_OK:
+//            fPushBlockSimStepToQueue(aSimStepBlockDelLocation, sizeof(aSimStepBlockDelLocation));  
+            break;
         case _SIM_COMM_EVENT_TCP_SEND_1:  
             _CbAppSim_TCP_Send_1(&sMQTT.str);
             break;
@@ -251,6 +363,7 @@ uint8_t AppSim_Process_AT_Event (uint8_t Type)
         case _SIM_COMM_EVENT_SUB_MQTT_2:
             mSet_default_MQTT(); 
             fevent_active(sEventAppSim, _EVENT_SIM_SEND_MESS);
+            UTIL_Printf_Str( DBLEVEL_M, "u_app_sim: mqtt connect ok!\r\n" );
             break;
         case _SIM_COMM_EVENT_PUB_MQTT_1:  
             mPublish_MQTT();
@@ -313,11 +426,11 @@ void _CbAppSim_Recv_sTime (ST_TIME_FORMAT sTimeSet)
     sRTCSet.day = ((HW_RTC_GetCalendarValue_Second (sRTCSet, 1) / SECONDS_IN_1DAY) + 6) % 7 + 1;
 #endif
     
-    fevent_active(sEventAppMain, _EVENT_SET_RTC);
+    fevent_active(sEventAppComm, _EVENT_SET_RTC);
     //active event log mess first
     if (MarkFirstGetTime == 0)
     {
-        fevent_active(sEventAppMain, _EVENT_IDLE);
+        fevent_active(sEventAppComm, _EVENT_IDLE);
     #ifdef USING_APP_WM
         fevent_active(sEventAppWM, _EVENT_ENTRY_WM);
     #endif
@@ -335,50 +448,44 @@ void _CbAppSim_Recv_sTime (ST_TIME_FORMAT sTimeSet)
 void _CbAppSim_Recv_PUBACK (void)
 {
     sMQTT.Status_u8 = TRUE;   //Set status ve true
-       
+        
     switch (sMQTT.MessType_u8)
     {
         case DATA_TSVH:
-            sRecTSVH.IndexSend_u16 = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
+            if (AppMem_Inc_Index_Send_2(&sRecTSVH, 1) == false)
+                AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_TSVH_B, sAppSimVar.sDataFlashSim.Data_a8, sAppSimVar.sDataFlashSim.Length_u16);
             
-        #ifdef MEMORY_ON_FLASH
-            Flash_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-        #else
-            ExMem_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-        #endif
+            //Unmark mess 
+            AppSim_Unmark_Mess(sMQTT.MessType_u8);
             
-            if (sRecTSVH.IndexSend_u16 == sRecTSVH.IndexSave_u16)
-                sMQTT.aMARK_MESS_PENDING[sMQTT.MessType_u8] = FALSE;  
-
             break;
         case DATA_TSVH_OPERA:
-            sRecTSVH.IndexSend_u16 = (sRecTSVH.IndexSend_u16 + sRecTSVH.CountMessPacket_u16) % sRecTSVH.MaxRecord_u16;
+            if (AppMem_Inc_Index_Send_2(&sRecTSVH, 1) == false)
+                AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_TSVH_B, sAppSimVar.sDataFlashSim.Data_a8, sAppSimVar.sDataFlashSim.Length_u16);
             
-        #ifdef MEMORY_ON_FLASH
-            Flash_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-        #else
-            ExMem_Save_Index(sRecTSVH.AddIndexSend_u32, sRecTSVH.IndexSend_u16);
-        #endif
-            
-            if (sRecTSVH.IndexSend_u16 == sRecTSVH.IndexSave_u16)
-                sMQTT.aMARK_MESS_PENDING[sMQTT.MessType_u8] = FALSE;  
+            //Unmark mess 
+            AppSim_Unmark_Mess(sMQTT.MessType_u8);
 
             break;
-        case SEND_EVENT_MESS:
-            sRecEvent.IndexSend_u16 = (sRecEvent.IndexSend_u16 + sRecEvent.CountMessPacket_u16) % sRecEvent.MaxRecord_u16;
+        case DATA_EVENT:
+            if (AppMem_Inc_Index_Send_2(&sRecEvent, 1) == false)
+                AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_EVENT_B, sAppSimVar.sDataFlashSim.Data_a8, sAppSimVar.sDataFlashSim.Length_u16);
+           
+            //Unmark mess 
+            AppSim_Unmark_Mess(sMQTT.MessType_u8);
             
-        #ifdef MEMORY_ON_FLASH
-            Flash_Save_Index(sRecEvent.AddIndexSend_u32, sRecEvent.IndexSend_u16);
-        #else
-            ExMem_Save_Index(sRecEvent.AddIndexSend_u32, sRecEvent.IndexSend_u16);
-        #endif
-            if (sRecEvent.IndexSend_u16 == sRecEvent.IndexSave_u16)
-                sMQTT.aMARK_MESS_PENDING[sMQTT.MessType_u8] = FALSE; 
-
+            break;
+        case DATA_GPS:
+            if (AppMem_Inc_Index_Send_2(&sRecGPS, 1) == false)
+                AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_GPS_B, sAppSimVar.sDataFlashSim.Data_a8, sAppSimVar.sDataFlashSim.Length_u16);
+           
+            //Unmark mess 
+            AppSim_Unmark_Mess(sMQTT.MessType_u8);
+            
             break;
         case SEND_SAVE_BOX_OK:
             sMQTT.aMARK_MESS_PENDING[sMQTT.MessType_u8] = FALSE; 
-            fevent_active(sEventAppMain, _EVENT_SAVE_BOX);
+            fevent_active(sEventAppComm, _EVENT_SAVE_BOX);
             break;
         case SEND_SHUTTING_DOWN:
         	Reset_Chip_Immediately();
@@ -417,7 +524,7 @@ void AppSim_Process_Downl_Mess (sData *sUartSim)
 
 void AppSim_Process_Sms (sData *sUartSim)
 {
-    PrintDebug(&uart_debug, (uint8_t*) "Check AT Request by SMS\r\n", 25, 1000);
+    UTIL_Printf_Str( DBLEVEL_M, "Check AT Request by SMS\r\n" );
     Check_AT_User(sUartSim, _AT_REQUEST_SERVER);  //check cac lenh AT cmd
 }
 
@@ -457,5 +564,44 @@ sData * (AppSim_Get_Firmware_Version) (void)
 {
     return &sFirmVersion;
 }
+
+
+/*
+    Func: Get buffer data from Flash
+        + Check crc and format again: 
+            + False: -> Luu vao flash part B and skip 
+            + true: Copy data to buff sim mqtt
+                    mark new mess to send now
+*/
+
+
+void AppSim_Get_Data_From_Flash (uint8_t MessType, uint8_t *pData, uint16_t Length)
+{ 
+    //Memset buff 
+    Reset_Buff (&sAppSimVar.sDataFlashSim);
+          
+    if (Length > sizeof (aDATA_FLASH_SIM) )
+        Length = sizeof (aDATA_FLASH_SIM);
+    
+    for (uint16_t i = 0; i < Length; i++)
+        *(sAppSimVar.sDataFlashSim.Data_a8 + sAppSimVar.sDataFlashSim.Length_u16++) = *(pData + i);
+    
+    //active event send mess mqtt
+    sMQTT.aMARK_MESS_PENDING[MessType] = TRUE;  
+    //Event
+    fevent_active( sEventAppSim, _EVENT_SIM_SEND_MESS);
+}
+
+
+
+void AppSim_Unmark_Mess (uint8_t TypeMess)
+{
+    sMQTT.aMARK_MESS_PENDING[TypeMess] = FALSE; 
+    Reset_Buff(&sAppSimVar.sDataFlashSim);
+}
+
+
+
+
 
 

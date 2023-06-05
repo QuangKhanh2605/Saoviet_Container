@@ -1,0 +1,81 @@
+user_app_eflash.pbi: \
+  E:\8.2023\3.GSM_Container\user_app\user_app_eflash\user_app_eflash.c \
+  E:\8.2023\3.GSM_Container\user_app\user_app_eflash/user_app_eflash.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_util.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\stm32l1xx_hal_conf.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_rcc.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_def.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Device/ST/STM32L1xx/Include\stm32l1xx.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Device/ST/STM32L1xx/Include/stm32l151xc.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Include\core_cm3.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdint.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\ycheck.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\yvals.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Defaults.h \
+  C:\\Program\ Files\ (x86)\\IAR\ Systems\\Embedded\ Workbench\ 8.3\\arm\\inc\\c\\DLib_Config_Full.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Include/cmsis_version.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Include/cmsis_compiler.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Include\cmsis_iccarm.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\iccarm_builtin.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Include/mpu_armv7.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/CMSIS/Device/ST/STM32L1xx/Include/system_stm32l1xx.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stddef.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\ysizet.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_rcc_ex.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_gpio.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_gpio_ex.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_dma.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_cortex.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_adc.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_adc_ex.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_flash.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ex.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ramfunc.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_i2c.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_pwr.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr_ex.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_rtc.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_rtc_ex.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_spi.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_uart.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_exti.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_uart\user_uart.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\usart.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc/main.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common\user_define.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_app_comm.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_eventdriven\event_driven.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_sim\user_app_sim.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_sim.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim/user_sim_common.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\main.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util\onchipflash.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util/user_util.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_ec200u\user_ec200u.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_sim_common.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_sim/user_mqtt.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_temp_humi\user_app_temh.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_adc.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\adc.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_mem\user_external_mem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_internal_mem\user_internal_mem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_mem\user_eeprom\cat24mxx.h \
+  E:\8.2023\3.GSM_Container\user_app\user_app_eflash\user_app_eflash.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_modem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_define.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_log\user_log.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_lpm.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_flash\user_external_flash.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_flash\external_flash_S25FL216K\S25FL216K.h \
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\spi.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_queue\queue_p.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common/user_modem_init.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_at_serial\user_at_serial.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_time.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_timer\user_rtc.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_timer/user_timer.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdbool.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_obis_sv.h

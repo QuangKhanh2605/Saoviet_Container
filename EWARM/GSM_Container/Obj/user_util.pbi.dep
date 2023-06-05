@@ -43,4 +43,6 @@ user_util.pbi: E:\8.2023\3.GSM_Container\user_util\user_util.c \
   E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_uart\user_uart.h \
   E:\8.2023\3.GSM_Container\user_util\user_util.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\usart.h \
-  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc/main.h
+  E:\8.2023\3.GSM_Container\EWARM/../Core/Inc/main.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\string.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product_string.h

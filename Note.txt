@@ -1,0 +1,120 @@
+
+
+
+
+
+
+
+
+
+
+
+
+			Thiết bị đọc nhiệt độ độ ẩm và GPS
+
+
+			1. Thu thập GPS
+				- Module đang sử dụng là EC200U-CN (quectel)
+				- Có 3 cách để lấy gps
+					+ Lấy từ vệ tinh: Theo tài liệu GNSS (pdf)
+					+ lấy theo scan wifi access: (Chưa thử)
+					+ Lấy theo trạm BTS station (dựa vào các trạm viễn thông)
+						* Quectel sẽ có bản đồ tọa độ dựa theo trạm BTS của nhiều quốc gia.
+						* Sau đó module sẽ gửi thông tin về server quectel (có thể tạo account dùng thử 30 ngày)
+							Từ những thông tin này sẽ tính toán để trả về giá trị location, hoặc dùng luôn platform của 
+							quectel
+					
+				1.1 Lựa chọn lấy gps theo vệ tinh
+					- Các lệnh đã cần chú ý
+						+ Lệnh QDEL (xóa dữ liệu đã tồn tại trước đó)
+							* Option 0: Xóa tất cả: Sau mỗi lần xóa sẽ mất tầm 28s để hot start và lấy đc location mới
+							* Option 1: Xóa một vài dữ liệu: 
+							* Option 2: Xóa một số dữ liệu liên quan: (Hãng bảo 4-5 s để khởi động lại, tuy nhiên test thấy mất 8-9s)
+						+ Khi khởi động module, gps cũng cần 1 thời gian để khởi động (40s) sau đó mới lấy được gps.
+						+ Tọa độ có thể cấu hình để print ra 1 port riêng (uart).
+					
+				1.2. Protocol server và device
+					- Giao thức để trên server có thể vẽ ra được đúng đường đi
+					- Thêm 1 loại bản tin data (Gpsda) Để gửi dữ liệu gps đường ghép liên tiếp nhau.
+					
+					- Nếu như chỉ lấy tọa độ và gửi lên server thì sẽ gặp nhiều khó khăn trong việc vẽ ra đường đi của xe theo gps.
+						+ Các vấn đề gặp phải
+							* Các tọa độ được thu thập theo 1 chu kì (vài giấy: vd 5s) nên giữa 2 tọa độ đã là 1 quãng đường khá lớn
+								Khi đó cần xử lý chọn đường nào giữa 2 tọa độ đó
+								Ở công cụ gì đó trên web chỉ cho phép vẽ ra đường giữa 2 tọa độ < 300m.
+								
+								-> Cần tăng tần suất thu thập dữ liệu (5s)
+								
+							* Tọa độ của module này có 5 số sau dấu phẩy, tuy nhiên trên gg map lại có 7 số sau số phẩy. Làm cho độ
+								chính xác của dữ liệu bị ảnh hưởng. Khi lấy tọa độ, anten có thể bị tán xạ, phản xạ (đại ca phượng 
+								suy luận) nên việc để thiết bị trong khu vực vật cản, tọa độ sẽ nhảy lung tung.
+								-> cần có thuật toán lọc các tọa độ khi đứng yên.
+								
+							* Đưa các tọa độ này ra giữa đường: Các tọa độ gửi về có độ sai số, nên a nghị cần xử lý tọa độ ra giữa đường.
+							    -> Khi di chuyển ngoài đường khá đúng, nhưng khi đứng yên ở vị trí k ở giữa đường thì lại vẽ ra giữa đường.
+								
+							* Khi đi từng trong hầm ra, hoặc khi khởi động, phải mất 1 khoảng thời gian mới bắt lại dc gps. 
+								trong khi đó quảng đường đi có thể quá 300m.
+								-> cần thêm các byte đánh dấu (0,0) khi k lấy được gps nữa, sau đó a nghị sẽ vẽ lại start từ sau điểm này. 
+								(để k bị nối thẳng giữa 2 lần mất)
+								
+						+
+						
+						
+			2. Thu thập dữ liệu nhiệt độ độ ẩm
+				2.1 Thiết bị node
+					- Thiêt bị node đã được tổ chức theo modbus rtu
+					- Quy định các tham số (thanh ghi) được mô tả trong file khánh gửi
+					  ( Lấy mẫu từ thiêt bị đo mực nước)
+					
+					
+				2.2 Giao thức thu thập
+					- Có 1 chân dùng để on off nguồn cho các node nhiệt độ độ ẩm
+					- Sử dụng modbus rtu để giao tiếp với các node
+					
+					- Giữa 2 lần gửi lệnh sang node là 500ms.
+					- Mỗi node sẽ hỏi 3 lần: và tính giá trị trung bình
+					
+					* Note:
+						+ Nếu như 10 lần k thu thập đủ dữ liệu toàn bộ node: sẽ reset nguồn của node
+							VD: Có 2 node: Mà status[0] và status[1], một trong 2 bị false (k thu thập được): countfail++.
+								Cho đến 10 lần sẽ reset nguồn node: off chân power, sau đó 2s on lại power
+								
+
+					
+					
+					
+			3. Ngoại quan Led
+				Sử dụng 3 led
+				- Led status: Dùng để nhận dạng status của module sim
+					Sim khởi động theo từng step sẽ có các kiểu nháy led khác nhau
+					+ Init Module sim: Nháy toggle 1s.
+					+ Connect server: Nháy chớp (430ms off, 70ms on)
+					+ Update fw: nháy nhanh toggle 100ms
+					
+				- Led GPS: 
+					+ Nếu như thu thập được gps sẽ toggle 500ms.
+					+ Nếu như k thu thập được sẽ off led
+					
+				- Led Temh: 
+					+ Thu thập đủ số node (2 node) sẽ toggle 500ms.
+						(thu thập căn cứ theo chu kì tsvh)
+					+ Nếu k đủ cả 2 node sẽ off led
+					
+				
+			
+			
+			
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+				
+					
+					

@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "E:\6.2022_Quy3_4\6.Do_Cos_Phi\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.general.xcl" --backend -f "E:\6.2022_Quy3_4\6.Do_Cos_Phi\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "E:\8.2023\3.GSM_Container\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.general.xcl" --backend -f "E:\8.2023\3.GSM_Container\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "E:\6.2022_Quy3_4\6.Do_Cos_Phi\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.general.xcl" "--debug_file=%~1" --backend -f "E:\6.2022_Quy3_4\6.Do_Cos_Phi\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "E:\8.2023\3.GSM_Container\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.general.xcl" "--debug_file=%~1" --backend -f "E:\8.2023\3.GSM_Container\CodeBootLoader_L151\EWARM\settings\Firmware.Firmware.driver.xcl" 
 
 @echo off 
 :end

@@ -74,6 +74,8 @@ typedef enum
     _QUERY_LEVEL_THRESH,
     
     _QUERY_GPS_LOC,
+    _SET_LIST_ID_SLAVE,
+    _QUERY_LIST_ID_SLAVE,
     
     _END_AT_CMD,
 }Type_Command_AT_PC;
@@ -151,8 +153,6 @@ void        _fQUERY_CALIB_LEVEL (sData *strRecei, uint16_t Pos);
 void        _fSET_LEVEL_THRESH (sData *strRecei, uint16_t Pos);
 void        _fQUERY_LEVEL_THRESH (sData *strRecei, uint16_t Pos);
 
-void        _fExtract_Index_RQ_Old_Record (sData *strRecei, uint16_t Pos, StructManageRecordFlash *sRec, uint8_t TypeRQ);
-
 uint8_t     Check_AT_User(sData *StrUartRecei, uint8_t Type);
 
 void        _fSET_SERVER_BACKUP_INFO (sData *strRecei, uint16_t Pos);
@@ -160,5 +160,10 @@ void        _fQUERY_SERVER_BACKUP_INFO (sData *strRecei, uint16_t Pos);
 void        _fREQ_SWITCH_SERVER (sData *strRecei, uint16_t Pos);
 void        _fSET_RF_RQ_STIME (sData *str_Receiv, uint16_t Pos);
 void        _fQUERY_GPS_LOC (sData *strRecei, uint16_t Pos);
+
+
+uint16_t    SERIAL_Get_Num (sData *strRecei, uint16_t Pos);
+void        _fQUERY_LIST_ID_SLAVE (sData *str_Receiv, uint16_t Pos);
+void        _fSET_LIST_ID_SLAVE (sData *str_Receiv, uint16_t Pos);
 
 #endif

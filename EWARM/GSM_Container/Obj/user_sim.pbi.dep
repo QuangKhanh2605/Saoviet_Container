@@ -47,6 +47,7 @@ user_sim.pbi: \
   E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_uart\user_uart.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\usart.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc/main.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_queue\queue_p.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_eventdriven\event_driven.h \
   E:\8.2023\3.GSM_Container\user_component\user_sim/user_sim_common.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\main.h \
@@ -54,12 +55,10 @@ user_sim.pbi: \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util/user_util.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_sim\user_ec200u\user_ec200u.h \
   E:\8.2023\3.GSM_Container\user_component\user_sim\user_sim_common.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_queue\queue_p.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_timer\user_timer.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdbool.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_string.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdlib.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product_stdlib.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_internal_mem\user_internal_mem.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_mem\user_external_mem.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_external_mem\user_eeprom\cat24mxx.h
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_internal_mem\user_internal_mem.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_mem_comm.h

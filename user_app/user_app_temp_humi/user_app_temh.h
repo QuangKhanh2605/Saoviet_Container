@@ -11,11 +11,10 @@
 
 #include "user_adc.h"
 
-#include "user_external_mem.h"
-#include "user_internal_mem.h"
 
+#define USING_APP_TEMH
 
-#define  USING_APP_TEMH
+#define MAX_SLAVE               5             
 
 /*============= Define =====================*/
 #define VDD_OUT_MAX             12000     
@@ -32,29 +31,40 @@
 
 
 #define SLAVE_ID_DEFAULT        0x1A
+#define NUM_SLAVE_DEFAULT       2
 
 #define MAX_POINT_CALIB         14
 #define DEFAULT_POINT_CALIB     11
 #define REAL                    0
-#define SAMP                    1
+#define SAMP                    1 
 
-#define LED_SIM_Pin             LED_3_Pin
-#define LED_SIM_GPIO_Port       LED_3_GPIO_Port   
-  
 #define UART_485	            huart1
 
+#define MAX_GET_TEMH_FAIL       10                
 
 /*================ var struct =================*/
 typedef enum
 {
-    _EVENT_ENTRY_TEMH,
-    _EVENT_LOG_TSVH,             //0
+    _EVENT_TEMH_ENTRY,
+    
+    _EVENT_POWER_ON_NODE,
+    _EVENT_TEMH_READ_VALUE,
+    _EVENT_TEMH_LOG_TSVH,             //0
     _EVENT_CONTROL_LED1,         //1
+    _EVENT_CONTROL_LED2,
+    _EVENT_CONTROL_LED3,
     
     _EVENT_TEST_RS485,
     
 	_EVENT_END_TEMP_HUMI,
 }eKindEventWm;
+
+typedef enum
+{
+    _LED_STATUS,
+    _LED_GPS,
+    _LED_TEMH,
+} Led_TypeDef;
 
 
 typedef enum
@@ -95,10 +105,27 @@ typedef struct
 }struct_ThresholdConfig;
 
 
+typedef struct
+{
+    int16_t     Val_i16;
+    uint16_t    Scale_u8; 
+    uint16_t    Unit_u16;
+}structFloatValue;
+
 
 typedef struct
 {
-    uint8_t SlaveID_u8;
+    uint8_t             ModBusStatus_u8;
+    
+    uint8_t             Status_u8[MAX_SLAVE]; 
+    uint8_t             aSlaveID[MAX_SLAVE];
+    structFloatValue    sTemperature[MAX_SLAVE];
+    structFloatValue    sHumidity[MAX_SLAVE]; 
+    
+    structFloatValue    sCurrent;
+    uint8_t             NumSlave_u8;
+    uint8_t             PowerStatus_u8;
+    uint8_t             CountFailGetTemh_u8;
 }STempHumiVariable;
 
 
@@ -113,24 +140,35 @@ extern uint8_t aMARK_ALARM_PENDING[10];
 extern sEvent_struct sEventAppTempH[];
 
 extern STempHumiVariable  sTempHumi;
-
+extern sData   sUart485;
+extern uint8_t aUART_485_DATA [64];
 
 /*================ Function =================*/
-uint8_t     _Cb_Log_TSVH (uint8_t event);
-uint8_t     _Cb_Control_Led1 (uint8_t event);
-uint8_t     _Cb_Entry_TemH (uint8_t event);
-uint8_t     _Cb_Test_RS485 (uint8_t event);
 
 //Function handler
-
 uint8_t     AppTemH_Task(void);
 void        AppTemH_Init (void);
+
+void        AppTemH_Init_Slave_ID (void);
+void        AppTemH_Save_Slave_ID (void);
+
+void        AppTemH_Init_Thresh_Measure (void);
 void        AppTemH_Save_Thresh_Measure (void);
 
-void        AppTemH_Log_Data_TSVH (StructManageRecordFlash *sRecordTSVH);
+void        AppTemH_Log_Data_TSVH (void);
 uint8_t     AppTemH_Packet_TSVH (uint8_t *pData);
-
 void        AppTemH_485_Read_Value (uint8_t SlaveID, void (*pFuncResetRecvData) (void)) ;
+uint8_t     AppTemH_Set_Mode_Led (void);
+void        AppTemH_Clear_Before_Recv (void);
+uint8_t     AppTemH_Extract_Data (uint8_t SlaveID, uint8_t *pSource, uint16_t Length, structFloatValue *sTemperature, structFloatValue *sHumi);
 
+uint16_t    AppTemH_Get_VBAT_mV(void);
+uint16_t    AppTemH_Get_Vout_mV(void);
+
+uint8_t     AppTemh_Check_Status_TempH (void);
+
+void        LED_Toggle (Led_TypeDef Led);
+void        LED_On (Led_TypeDef Led);
+void        LED_Off (Led_TypeDef Led);
 
 #endif

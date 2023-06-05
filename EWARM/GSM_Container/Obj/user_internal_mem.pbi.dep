@@ -1,6 +1,6 @@
 user_internal_mem.pbi: \
-  E:\8.2023\3.GSM_Container\user_component\user_internal_mem\user_internal_mem.c \
-  E:\8.2023\3.GSM_Container\user_component\user_internal_mem/user_internal_mem.h \
+  E:\8.2023\3.GSM_Container\user_component\user_mem\user_internal_mem\user_internal_mem.c \
+  E:\8.2023\3.GSM_Container\user_component\user_mem\user_internal_mem/user_internal_mem.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_util.h \
   E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\stm32l1xx_hal_conf.h \
@@ -46,4 +46,7 @@ user_internal_mem.pbi: \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\usart.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc/main.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\onchipflash.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_util/user_util.h
+  E:\8.2023\3.GSM_Container\EWARM\..\user_util/user_util.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_eventdriven\event_driven.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_queue\queue_p.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_component\user_mem\user_mem_comm.h

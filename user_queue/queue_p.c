@@ -21,7 +21,7 @@ static void qCopy_Data_From_Queue(Struct_Queue_Type *sQueue, void *aBuffer, uint
             Khoi tao cac bien 
             Khoi tao con tro tro toi mang struct. aBuffQueue
 */
-void qQueue_Create (Struct_Queue_Type *qQueue, uint8_t Length, uint8_t Size, void *aBuffQueue)
+void qQueue_Create (Struct_Queue_Type *qQueue, uint8_t Length, uint16_t Size, void *aBuffQueue)
 {
 	qQueue->status = 0;
 	qQueue->Head_u8 = aBuffQueue;
@@ -139,7 +139,8 @@ static void qCopy_Data_From_Queue(Struct_Queue_Type *sQueue, void *aBuffer, uint
     {        
         if (sQueue->SizeItem_u8 != 0)
         {
-            (void) memcpy((void *) aBuffer, (void *) sQueue->pcReadFrom, sQueue->SizeItem_u8 ); 
+            if (aBuffer != NULL)
+                (void) memcpy((void *) aBuffer, (void *) sQueue->pcReadFrom, sQueue->SizeItem_u8 ); 
             
             sQueue->pcReadFrom += sQueue->SizeItem_u8;
             

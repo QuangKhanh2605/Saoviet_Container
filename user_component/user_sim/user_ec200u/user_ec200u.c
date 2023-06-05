@@ -30,6 +30,7 @@ static uint8_t _Cb_AT_CHECK_ATTACH(sData *str_Receive);
 static uint8_t _CbAT_GET_CLOCK(sData *uart_string);
 static uint8_t _CbAT_CHECK_SIM(sData *uart_string);
 static uint8_t _CbAT_GET_IP_SIM(sData *uart_string);
+static uint8_t _CbAT_TCP_CLOSE_1(sData *uart_string);
 static uint8_t _CbAT_NON_TRANPARENT_MODE(sData *uart_string);
 static uint8_t _CbAT_TRANPARENT_MODE(sData *uart_string);
 static uint8_t _CbAT_OPEN_TCP_1 (sData *uart_string);
@@ -108,7 +109,8 @@ uint8_t aSimStepBlockInit[13] =
 
   
 
-uint8_t aSimStepBlockNework[8] = 
+
+uint8_t aSimStepBlockNework[10] = 
 {
 	_SIM_NET_CHECK_ATTACH,      //0
     _SIM_SMS_READ_UNREAD,       //1
@@ -117,22 +119,28 @@ uint8_t aSimStepBlockNework[8] =
 	_SIM_NET_GET_RTC,           //4
 	_SIM_AT_SET_APN_1,          //5
     _SIM_AT_SET_APN_2,          //6
-    _SIM_GPS_POSTION_INF,       //7
+    _SIM_GPS_TURN_ON,           //7
+    _SIM_AT_CHECK_RSSI,         //8
+    _SIM_GPS_POSTION_INF,       //9
     
-//    _SIM_GPS_TURN_ON,           //6
 //    _SIM_GPS_CFG_TOKEN,         //7
 //    _SIM_GPS_QUERY_TOKEN,       //8
 //    _SIM_GPS_CFG_FORMAT,        //9
 //    _SIM_GPS_GET_LOCATION,      //10    
 //    _SIM_GPS_TURN_OFF,          //11   
 };
-     
+   
 
 uint8_t aSimStepBlockLocation[2] = 
 {
     _SIM_AT_CHECK_RSSI,
     _SIM_GPS_POSTION_INF,
 //    _SIM_GPS_GET_LOCATION,
+};
+
+uint8_t aSimStepBlockDelLocation[1] = 
+{
+    _SIM_GPS_DEL_CUR_DATA,
 };
 
 
@@ -207,7 +215,8 @@ uint8_t  aSIM_STEP_INFOR_CSQ[3] =
 uint8_t aSimStepBlockDisConnect[3] = 
 {
     _SIM_TCP_OUT_DATAMODE,
-	_SIM_TCP_CLOSE,
+	_SIM_TCP_CLOSE_1,
+    _SIM_TCP_CLOSE_2,
 };
 
 uint8_t aSimStepBlockGetClock[3] = 
@@ -291,7 +300,7 @@ const sCommand_Sim_Struct aSimEC200UStep[] =
     //Cmd Init
     {   _SIM_AT_BAUD_RATE, 			at_callback_success,        at_callback_failure,        "OK",                   "AT+IPR=115200\r"	},
     {	_SIM_AT_GET_ID,			    _CbAT_SIM_ID,               at_callback_failure,        "CCID: ",               "AT+QCCID\r"     	},
-	{	_SIM_AT_CHECK_RSSI,			_CbAT_CHECK_RSSI,           at_callback_failure,        "+CSQ: ",               "AT+CSQ\r" 	 	    },
+	{	_SIM_AT_CHECK_RSSI,			_CbAT_CHECK_RSSI,           at_callback_failure,        "+CSQ: ",               "AT+CSQ\r\n" 	 	},
 	{   _SIM_AT_GET_IMEI, 		    _CbAT_GET_IMEI,             at_callback_failure,        "OK",                   "AT+CGSN=1\r"		},
 	{	_SIM_AT_CHECK_SIM,			_CbAT_CHECK_SIM,            at_callback_failure,        "OK",                   "AT+CPIN?\r"  	    },
     {	_SIM_AT_SET_APN_1,      	_CbAT_SET_APN,              at_callback_failure,        NULL,                   "AT+CGDCONT=1,\"IP\",\""		}, 
@@ -326,7 +335,8 @@ const sCommand_Sim_Struct aSimEC200UStep[] =
 #endif   
     //Cmd TCP 
     {   _SIM_TCP_IP_SIM,	        _CbAT_GET_IP_SIM,           at_callback_failure,        "OK",                   "AT+QISTATE=1,0\r"  },         
-	{	_SIM_TCP_CLOSE,	 	        at_callback_success,        at_callback_failure,        "OK",	                "AT+QICLOSE=0\r"  	},
+	{	_SIM_TCP_CLOSE_1,	 	    _CbAT_TCP_CLOSE_1,          at_callback_failure,        NULL,	                "AT+QICLOSE="  	},
+    {	_SIM_TCP_CLOSE_2,	 	    at_callback_success,        at_callback_failure,        "OK",	                "\r"  	},
 
     {	_SIM_TCP_CONNECT_1,	        _CbAT_OPEN_TCP_1,           at_callback_failure,        NULL,                   "AT+QIOPEN=1,"     	},
 #ifdef USING_TRANSPARENT_MODE
@@ -416,7 +426,9 @@ const sCommand_Sim_Struct aSimEC200UStep[] =
     {   _SIM_GPS_QUERY_TOKEN,       at_callback_success,        at_callback_failure,        "OK",                   "AT+QLBSCFG=\"token\"\r"    	},
     {   _SIM_GPS_GET_LOCATION,      at_callback_success,        at_callback_failure,        "OK",                   "AT+QLBS=0\r"       }, 
     //GPS: GNSS
-    {   _SIM_GPS_CFG_OUT_PORT,      at_callback_success,        at_callback_failure,        "OK",                   "AT+QGPSCFG=\"outport\",\"usbnmea\"\r"  }, // "AT+QGPSCFG=\"autogps\",1\r"    	},  // "AT+QGPSCFG=\"outport\",\"usbnmea\"\r"
+    {   _SIM_GPS_CFG_OUT_PORT,      at_callback_success,        at_callback_failure,        "OK",                   "AT+QGPSCFG=\"outport\",\"usbnmea\"\r"  }, // "AT+QGPSCFG=\"outport\",\"usbnmea\"\r"
+    {   _SIM_GPS_CFG_AUTO_RUN,      at_callback_success,        at_callback_failure,        "OK",                   "AT+QGPSCFG=\"autogps\",1\r"   }, 
+    {   _SIM_GPS_DEL_CUR_DATA,      at_callback_success,        at_callback_failure,        "OK",                   "AT+QGPSDEL=1\r"   },
     {   _SIM_GPS_TURN_ON,           at_callback_success,        at_callback_failure,        "OK",                   "AT+QGPS=1\r"    	},
     {   _SIM_GPS_POSTION_INF,       _Cb_GPS_POSITION_INF,       at_callback_failure,        "OK",                   "AT+QGPSLOC=2\r"    },
     {   _SIM_GPS_TURN_OFF,          at_callback_success,        at_callback_failure,        "OK",                   "AT+QGPSEND\r"       },   
@@ -431,8 +443,8 @@ const sCommand_Sim_Struct aSimUrc[] =
 	{   _SIM_URC_RESET_SIM900,		_CbURC_RESET_SIM900,        NULL,       "NORMAL POWER DOWN",        NULL    },// OK
 	{   _SIM_URC_SIM_LOST, 			_CbURC_SIM_LOST,            NULL,       "SIM CRASH",	            NULL 	},
 	{   _SIM_URC_SIM_REMOVE, 	    _CbURC_SIM_LOST,            NULL,       "SIM REMOVED",		        NULL	},
-	{   _SIM_URC_CLOSED,			_CbURC_CLOSED,              NULL,       "+SERVER DISCONNECTED:",    NULL	},   //+SERVER DISCONNECTED:0
-	{   _SIM_URC_PDP_DEACT, 		_CbURC_CLOSED,              NULL,       "+NETWORK DISCONNECTED",    NULL	},   //+NETWORK DISCONNECTED:0
+	{   _SIM_URC_CLOSED,			_CbURC_CLOSED,              NULL,       "+QIURC: \"closed\"",       NULL	},   
+	{   _SIM_URC_PDP_DEACT, 		_CbURC_CLOSED,              NULL,       "+NETWORK DISCONNECTED",    NULL	},   
 	{   _SIM_URC_CALL_READY, 		_CbURC_CALL_READY,          NULL,       "Call Ready",		        NULL    },
     {   _SIM_URC_CALLING, 		    _CbURC_CALLING,             NULL,       "+CLIP:",                   NULL	},
     {   _SIM_URC_SMS_CONTENT, 		_CbURC_SMS_CONTENT,         NULL,       "+CMGL:",                   NULL	},
@@ -589,6 +601,17 @@ static uint8_t _CbAT_GET_IP_SIM(sData *uart_string)
     return 1;
 }
 
+static uint8_t _CbAT_TCP_CLOSE_1(sData *uart_string)
+{
+    uint8_t aCID = CID_SERVER;
+    
+    Sim_Common_Send_AT_Cmd(&uart_sim, &aCID, 1, 1000);
+    
+    return 1;
+}
+
+
+
 
 static uint8_t _CbAT_OPEN_TCP_1(sData *uart_string)
 {
@@ -598,7 +621,7 @@ static uint8_t _CbAT_OPEN_TCP_1(sData *uart_string)
 
     aTEMP_STR[0] = CID_SERVER;
     
-    HAL_UART_Transmit(&uart_sim, &aTEMP_STR[0], 9, 1000);
+    Sim_Common_Send_AT_Cmd(&uart_sim, &aTEMP_STR[0], 9, 1000);
     
     TypeConnnect = sSimCommFuncCallBack->pSim_Common_Handler_AT (_SIM_COMM_EVENT_GET_CONN);
         
@@ -1233,9 +1256,7 @@ static uint8_t _CbHTTP_READ_2(sData *uart_string)
     return Sim_Common_Http_Read_Data (uart_string);
 }
 
-
 // +QGPSLOC: <UTC>,<latitude>,<longitude>,
-
 static uint8_t _Cb_GPS_POSITION_INF(sData *uart_string)
 {
     sData strCheck = {(uint8_t *) "+QGPSLOC: ", 10};
@@ -1249,53 +1270,54 @@ static uint8_t _Cb_GPS_POSITION_INF(sData *uart_string)
     {
         PosFind += strCheck.Length_u16;
         //Tim kiem day phay tiep theo: la vi tri bat dau
-        for (PosStart = PosFind; PosStart < uart_string->Length_u16; PosStart++)
+        for (i = PosFind; i < uart_string->Length_u16; i++)
         {
-            if (*(uart_string->Data_a8 + PosStart) == ',')
+            if (*(uart_string->Data_a8 + i) == ',')
             {
-                PosStart++;
-                Result = true;
-                break;
+                CountPh++;
+               
+                if (CountPh == 1)
+                {
+                    //Vi tri dau phay dau tien: start
+                    PosStart = i + 1;
+                } else if (CountPh == 3)
+                {
+                    //Vi tri dau phay thu 3: Stop va ket thuc
+                    PosEnd = i;
+                    Result = true;
+                    break;
+                }
             }
         }
-        
+                    
         if (Result == true)
         {
-            Result = false;
-
-            //Tim vi tri ket thuc data: Tim dau ',' Thu 2
-            for (PosEnd = PosStart; PosEnd < uart_string->Length_u16; PosEnd++)
-            {
-                if (*(uart_string->Data_a8 + PosEnd) == ',')
-                {
-                    CountPh++;
-                    if (CountPh == 2)
-                    {
-                        Result = true;
-                        break;
-                    }
-                }
-            }
-            //Tim dc vi tri end va start: data se lay trong khoang nay
+            //Push block clear data cu
+            sSimCommFuncCallBack->pSim_Common_Handler_AT ( _SIM_COMM_EVENT_GPS_OK );        
+                
+            sSimCommon.sGPS.LengData_u8 = PosEnd - PosStart;
             
-            if (Result == true)
+            if (sSimCommon.sGPS.LengData_u8 < MAX_LENGTH_GPS)
             {
                 sSimCommon.sGPS.Status_u8 = true;
-                sSimCommon.sGPS.LengData_u8 = PosEnd - PosStart;
                 
-                if (sSimCommon.sGPS.LengData_u8 < MAX_LENGTH_GPS)
+                for (i = 0; i < sSimCommon.sGPS.LengData_u8; i++)
                 {
-                    for (i = 0; i < sSimCommon.sGPS.LengData_u8; i++)
-                    {
-                        sSimCommon.sGPS.aPOS_INFOR[i] = *(uart_string->Data_a8 + PosStart + i) ;
-                    }
-                    //Get OK
+                    sSimCommon.sGPS.aPOS_INFOR[i] = *(uart_string->Data_a8 + PosStart + i) ;
                 }
+                //Get OK
+                UTIL_Printf_Str (DBLEVEL_M, "u_ec200u: gps get data OK!\r\n" );
+                
+                return 1;
+            } else
+            {
+                UTIL_Log_Str (DBLEVEL_M, "u_ec200u: over size data!\r\n" );
+                sSimCommon.sGPS.LengData_u8 = 0;
             }
         }
     }
     
-    UTIL_Printf ( (uint8_t *) "u_ec200u: gps get data error!\r\n", 31);
+    UTIL_Log_Str ( DBLEVEL_M, "u_ec200u: gps get data error!\r\n" );
     
     return 1;
 }
@@ -1365,8 +1387,17 @@ uint8_t EC200U_Is_Step_Check_URC (uint8_t sim_step)
 
 uint8_t EC200U_Check_Step_Skip_Error (uint8_t step)
 {
-    if ( step == _SIM_GPS_POSTION_INF)
+    if ( step == _SIM_GPS_POSTION_INF )
+        sSimCommon.sGPS.Status_u8   = error;
+    
+    if ( ( step == _SIM_GPS_POSTION_INF) || (step == _SIM_GPS_TURN_ON) || (step == _SIM_GPS_DEL_CUR_DATA) )
         return true;
     
     return false;
 }
+
+
+
+
+
+

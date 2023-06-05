@@ -1306,30 +1306,36 @@
     <group>
         <name>user_app</name>
         <group>
-            <name>user_app_main</name>
+            <name>user_app_comm</name>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\Customer_Config.h</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_common\user_app_comm.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\user_app_main.c</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_common\user_app_comm.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\user_app_main.h</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_common\user_define.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\user_define.h</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_common\user_modem.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\user_modem.c</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_common\user_modem.h</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\user_modem.h</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_common\user_modem_init.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\user_modem_init.c</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_common\user_modem_init.h</name>
+            </file>
+        </group>
+        <group>
+            <name>user_app_mem</name>
+            <file>
+                <name>$PROJ_DIR$\..\user_app\user_app_mem\user_app_mem.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_main\user_modem_init.h</name>
+                <name>$PROJ_DIR$\..\user_app\user_app_mem\user_app_mem.h</name>
             </file>
         </group>
         <group>
@@ -1423,48 +1429,54 @@
             </file>
         </group>
         <group>
-            <name>user_extenal_flash</name>
+            <name>user_memory</name>
             <group>
-                <name>user_flash_S25FL216K</name>
+                <name>user_external_eeprom</name>
+                <group>
+                    <name>user_cat24</name>
+                    <file>
+                        <name>$PROJ_DIR$\..\user_component\user_mem\user_external_eeprom\user_cat24\cat24mxx.c</name>
+                    </file>
+                    <file>
+                        <name>$PROJ_DIR$\..\user_component\user_mem\user_external_eeprom\user_cat24\cat24mxx.h</name>
+                    </file>
+                </group>
                 <file>
-                    <name>$PROJ_DIR$\..\user_component\user_external_flash\external_flash_S25FL216K\S25FL216K.c</name>
+                    <name>$PROJ_DIR$\..\user_component\user_mem\user_external_eeprom\user_external_eeprom.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\user_component\user_external_flash\external_flash_S25FL216K\S25FL216K.h</name>
+                    <name>$PROJ_DIR$\..\user_component\user_mem\user_external_eeprom\user_external_eeprom.h</name>
+                </file>
+            </group>
+            <group>
+                <name>user_external_flash</name>
+                <group>
+                    <name>user_eflash_S25FL216K</name>
+                    <file>
+                        <name>$PROJ_DIR$\..\user_component\user_mem\user_external_flash\external_flash_S25FL216K\S25FL216K.c</name>
+                    </file>
+                    <file>
+                        <name>$PROJ_DIR$\..\user_component\user_mem\user_external_flash\external_flash_S25FL216K\S25FL216K.h</name>
+                    </file>
+                </group>
+                <file>
+                    <name>$PROJ_DIR$\..\user_component\user_mem\user_external_flash\user_external_flash.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\user_component\user_mem\user_external_flash\user_external_flash.h</name>
+                </file>
+            </group>
+            <group>
+                <name>user_internal_mem</name>
+                <file>
+                    <name>$PROJ_DIR$\..\user_component\user_mem\user_internal_mem\user_internal_mem.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\user_component\user_mem\user_internal_mem\user_internal_mem.h</name>
                 </file>
             </group>
             <file>
-                <name>$PROJ_DIR$\..\user_component\user_external_flash\user_external_flash.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\user_component\user_external_flash\user_external_flash.h</name>
-            </file>
-        </group>
-        <group>
-            <name>user_extenal_mem</name>
-            <group>
-                <name>user_eeprom</name>
-                <file>
-                    <name>$PROJ_DIR$\..\user_component\user_external_mem\user_eeprom\cat24mxx.c</name>
-                </file>
-                <file>
-                    <name>$PROJ_DIR$\..\user_component\user_external_mem\user_eeprom\cat24mxx.h</name>
-                </file>
-            </group>
-            <file>
-                <name>$PROJ_DIR$\..\user_component\user_external_mem\user_external_mem.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\user_component\user_external_mem\user_external_mem.h</name>
-            </file>
-        </group>
-        <group>
-            <name>user_internal_mem</name>
-            <file>
-                <name>$PROJ_DIR$\..\user_component\user_internal_mem\user_internal_mem.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\user_component\user_internal_mem\user_internal_mem.h</name>
+                <name>$PROJ_DIR$\..\user_component\user_mem\user_mem_comm.h</name>
             </file>
         </group>
         <group>

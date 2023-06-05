@@ -3,7 +3,7 @@
     Thu vien Quan ly cac function convert
 */
 
-#if defined (STM32L151xC) 
+#if defined (STM32L151xC)  
     #include "stm32l1xx_hal.h"
     #include "stm32l1xx.h"
 
@@ -38,18 +38,20 @@
 #define TRUE 	        1
 #define FALSE 	        0
 #define PENDING	        2
+#define ERROR           3
 
 #define true			1
 #define false			0
+#define pending			2
+#define error			3
 
-#define DEBUG_AT_SIM    0                   //1: disable;    0 la able
-#define DEBUG_MODE      0                   //1: khong Cho print ra Uart1;  0: alow
+#define VLEVEL_ENABLE   1       //Cho phep DEBUG printf
 
-#if (DEBUG_MODE == 0)
-    #define PrintDebug(...)  HAL_UART_Transmit(__VA_ARGS__)
-#else
-    #define PrintDebug(...)
-#endif
+#define DBLEVEL_L        1       /*!< just essential traces */
+#define DBLEVEL_M        2       /*!< functional traces */
+#define DBLEVEL_H        3       /*!< all traces */
+
+#define _VLEVEL_DEBUG   DBLEVEL_M
 
 
 #define UTILS_INIT_CRITICAL_SECTION()
@@ -123,12 +125,14 @@ uint8_t         Convert_String_To_Hex (uint8_t NumString);
 uint32_t        Convert_String_To_Dec(uint8_t *pData, uint8_t lenData);
 
 void            UTIL_MEM_set( void *dst, uint8_t value, uint16_t size );
-void            UTIL_Print_Number (uint32_t Number);
-
 uint8_t         Convert_Hex_To_StringHex (uint8_t Hex);
 
-void            UTIL_Log (uint8_t *pData, uint16_t Length);
-void            UTIL_Printf (uint8_t *pData, uint16_t Length);
+void            UTIL_Log (uint8_t Level, uint8_t *pData, uint16_t Length);
+void            UTIL_Log_Str (uint8_t Level, const char *str);
 
+void            UTIL_Printf (uint8_t Level, uint8_t *pData, uint16_t Length);
+void            UTIL_Printf_Str (uint8_t Level, const char *str);
+void            UTIL_Printf_Hex (uint8_t Level, uint8_t *pData, uint16_t Length);
+void            UTIL_Printf_Dec (uint8_t Level, uint32_t Number);
 
 #endif

@@ -9,7 +9,6 @@
 #define QUEUE_QUEUE_H_
 
 #include <stdint.h>
-
 #include "user_util.h"
 
 
@@ -25,7 +24,7 @@ typedef struct
 
 	uint8_t 	NumWaiting_u8;       //So phan tu dang cho xu ly
 	uint8_t 	LenQueue_u8;         //Tong so Max phan tu trong queue
-	uint8_t 	SizeItem_u8;         //Size 1 item cua queue
+	uint16_t 	SizeItem_u8;         //Size 1 item cua queue
 } Struct_Queue_Type;
 
 //Struct Queue Message
@@ -45,12 +44,8 @@ typedef enum
     _TYPE_SEND_END,
 }Type_Send_Queue;
 
-
-extern Struct_Queue_Type qSimFlash;
-extern Struct_Queue_Type qSimStep;
-
 /*==============Function ======================*/
-void        qQueue_Create (Struct_Queue_Type *qQueue, uint8_t Length, uint8_t Size, void *aBuffQueue);
+void        qQueue_Create (Struct_Queue_Type *qQueue, uint8_t Length, uint16_t Size, void *aBuffQueue);
 uint8_t     qQueue_Send (Struct_Queue_Type *qQueue, void *Item, uint8_t HeadOrEnd);
 uint8_t     qQueue_Receive (Struct_Queue_Type *qQueue, void *Item, uint8_t Type);
 uint8_t     qGet_Number_Items(Struct_Queue_Type *sQueue);

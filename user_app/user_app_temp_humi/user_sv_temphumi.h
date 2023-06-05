@@ -14,7 +14,7 @@
 #define REGIS_VALUE 	    0x0004
 
 
-#define NUM_REGISTER_READ   6
+#define NUM_REGISTER_READ   8
 
 
 #endif

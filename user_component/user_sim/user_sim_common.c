@@ -17,12 +17,12 @@ uint8_t	    aAPN_USERNAME[BUFF_LENGTH_SETUP] = "xyz";
 uint8_t	    aAPN_PASSWORD[BUFF_LENGTH_SETUP] = "1111";
 
 /*=== Server Infor Buffer*/
-uint8_t     aIP_SERVER_MAIN[MAX_IP_LENGTH]  = "117.6.163.177";  //117.6.163.177 port 1883
+uint8_t     aIP_SERVER_MAIN[MAX_IP_LENGTH]  = "124.158.5.154";  //124.158.5.154 port 1883
 uint8_t     aPORT_SERVER_MAIN[MAX_PORT_LENGTH] = "1883";
 uint8_t     aUSER_MQTT_MAIN[MAX_USER_PASS_LENGTH] = "syswmsv";
 uint8_t     aPASS_MQTT_MAIN[MAX_USER_PASS_LENGTH] = "sv@wmsv568";
 
-uint8_t     aIP_SERVER_BACKUP[MAX_IP_LENGTH] = "mqtt.saovietgroup.com.vn";  
+uint8_t     aIP_SERVER_BACKUP[MAX_IP_LENGTH] = "124.158.5.154";  
 uint8_t     aPORT_SERVER_BACKUP[MAX_PORT_LENGTH] = "7525";
 uint8_t     aUSER_MQTT_BACKUP[MAX_USER_PASS_LENGTH] = "syswmsv";
 uint8_t     aPASS_MQTT_BACKUP[MAX_USER_PASS_LENGTH] = "sv@wmsv568";
@@ -558,7 +558,7 @@ void Sim_Common_Init_Var_Default (void)
 //
 void Sim_Common_Send_AT_Cmd (UART_HandleTypeDef *huart, uint8_t *string, uint16_t length, uint32_t TimeOut) 
 {
-    HAL_UART_Transmit(&uart_debug, string, length, TimeOut);
+    UTIL_Printf( DBLEVEL_M, string, length );
 	HAL_UART_Transmit(huart, string, length, TimeOut);
 }
 
@@ -578,9 +578,9 @@ void Sim_Common_Init_Struct_FileSys (void)
 void Sim_Common_Default_Struct_GPS (void)
 {
     sSimCommon.sGPS.Status_u8   = FALSE;
-    sSimCommon.sGPS.LengData_u8 = 0;
-    
-    UTIL_MEM_set( sSimCommon.sGPS.aPOS_INFOR, 0, sizeof (sSimCommon.sGPS.aPOS_INFOR) );
+//    sSimCommon.sGPS.LengData_u8 = 0;
+//    
+//    UTIL_MEM_set( sSimCommon.sGPS.aPOS_INFOR, 0, sizeof (sSimCommon.sGPS.aPOS_INFOR) );
 }
 
 

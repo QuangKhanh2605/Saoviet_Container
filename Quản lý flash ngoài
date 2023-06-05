@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+			Quản lý flash
+			
+			
+	1. Kịch bản ghi vào flash
+		* Đến chu kì -> Đóng gói bản tin (TSVH, Event, LOG) -> active Event check Queue (lib ex flash) -> Get Item (check item) and push cmd write
+		 -> Lưu vào OK  -> Tăng index addr -> _Cb (active event check new messsage trong app sim)
+		 
+		 -> Lưu vào k OK -> Set flag Pending = false -> Get item again (check item) -> 
+		 
+		 
+		 
+	2. Kich bản phần đọc từ Flash ra
+	
+		* App Sim check neww mess (dựa vào index send và save)
+		-> Clear Bản tin (TSVH, Event) Đang đánh dấu bên app sim
+		-> Push step đọc (loại bản tin, Addr )
+		-> 
+		
+
+		
+		
+		
+		
+		
+		 
+		 
+		 

@@ -1,6 +1,6 @@
 cat24mxx.pbi: \
-  E:\8.2023\3.GSM_Container\user_component\user_external_mem\user_eeprom\cat24mxx.c \
-  E:\8.2023\3.GSM_Container\user_component\user_external_mem\user_eeprom/cat24mxx.h \
+  E:\8.2023\3.GSM_Container\user_component\user_mem\user_external_eeprom\user_cat24\cat24mxx.c \
+  E:\8.2023\3.GSM_Container\user_component\user_mem\user_external_eeprom\user_cat24/cat24mxx.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_util.h \
   E:\8.2023\3.GSM_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\stm32l1xx_hal_conf.h \

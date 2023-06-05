@@ -210,7 +210,16 @@ void SysTick_Handler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-   
+   uint8_t	TempRecieve_u8 = 0;
+    
+    TempRecieve_u8 = (uint8_t)(huart1.Instance->DR & 0x00FF);
+            
+    *(sUart485.Data_a8 + sUart485.Length_u16++) = TempRecieve_u8;
+
+    if (sUart485.Length_u16 >= (sizeof(aUART_485_DATA) - 1))
+        sUart485.Length_u16 = 0;
+    
+   sTempHumi.ModBusStatus_u8 = TRUE;
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
@@ -256,7 +265,7 @@ void USART3_IRQHandler(void)
     if (sUartDebug.Length_u16 > (sizeof (UartDebugBuff) - 1))
         sUartDebug.Length_u16 = 0;
 
-    fevent_enable(sEventAppMain, _EVENT_PROCESS_UART_DEBUG);
+    fevent_enable(sEventAppComm, _EVENT_PROCESS_UART_DEBUG);
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */

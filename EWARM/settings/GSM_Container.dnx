@@ -14,13 +14,13 @@
     <StLinkDriver>
         <stlinkserialNo>49170881</stlinkserialNo>
         <stlinkfoundProbes />
-        <stlinkResetStyle>0</stlinkResetStyle>
-        <stlinkResetStrategy>2</stlinkResetStrategy>
         <CStepIntDis>_ 0</CStepIntDis>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
+        <stlinkResetStyle>0</stlinkResetStyle>
+        <stlinkResetStrategy>2</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>3448421153</Checksum>
+        <Checksum>3892302416</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -40,11 +40,11 @@
     </CallStack>
     <SWOTraceHWSettings>
         <OverrideDefaultClocks>0</OverrideDefaultClocks>
-        <CpuClock>16000000</CpuClock>
+        <CpuClock>32000000</CpuClock>
         <ClockAutoDetect>0</ClockAutoDetect>
         <ClockWanted>2000000</ClockWanted>
         <JtagSpeed>2000000</JtagSpeed>
-        <Prescaler>8</Prescaler>
+        <Prescaler>16</Prescaler>
         <TimeStampPrescIndex>0</TimeStampPrescIndex>
         <TimeStampPrescData>0</TimeStampPrescData>
         <PcSampCYCTAP>1</PcSampCYCTAP>
@@ -64,7 +64,37 @@
         <Fmt4>ST_TIME_FORMAT-month	3	0</Fmt4>
         <Fmt5>ST_TIME_FORMAT-sec	3	0</Fmt5>
         <Fmt6>ST_TIME_FORMAT-year	3	0</Fmt6>
+        <Fmt7>Struct_Queue_Type-LenQueue_u8	3	0</Fmt7>
+        <Fmt8>Struct_Queue_Type-NumWaiting_u8	3	0</Fmt8>
+        <Fmt9>Struct_Queue_Type-SizeItem_u8	3	0</Fmt9>
+        <Fmt10>sMemHandleWrite-Addr_u32	4	0</Fmt10>
+        <Fmt11>sMemoryManager-Status_u8	3	0</Fmt11>
+        <Fmt12>sRecordMemoryManager-AddAStart_u32	4	0</Fmt12>
+        <Fmt13>sRecordMemoryManager-AddAStop_u32	4	0</Fmt13>
+        <Fmt14>sRecordMemoryManager-AddA_u32	4	0</Fmt14>
+        <Fmt15>sRecordMemoryManager-AddBStart_u32	4	0</Fmt15>
+        <Fmt16>sRecordMemoryManager-AddBStop_u32	4	0</Fmt16>
+        <Fmt17>sRecordMemoryManager-AddB_u32	4	0</Fmt17>
+        <Fmt18>sRecordMemoryManager-AddIndexSave_u32	4	0</Fmt18>
+        <Fmt19>sRecordMemoryManager-AddIndexSend_u32	4	0</Fmt19>
+        <Fmt20>sRequestATcmd-Port_u8	3	0</Fmt20>
+        <Fmt21>sRequestATcmd-Status_u8	3	0</Fmt21>
+        <Fmt22>sRequestATcmd-TypeData_u8	3	0</Fmt22>
+        <Fmt23>structFloatValue-Unit_u16	4	0</Fmt23>
     </struct_types>
+    <watch_formats>
+        <Fmt0>{W}42:CountGetDataFail_u8	3	0</Fmt0>
+        <Fmt1>{W}42:MarkResetDaily	3	0</Fmt1>
+        <Fmt2>{W}42:sAppSimVar.IsGetGPS_u8	3	0</Fmt2>
+        <Fmt3>{W}42:sExFlash.Retry_u8	3	0</Fmt3>
+        <Fmt4>{W}42:sExFlash.Status_u8	3	0</Fmt4>
+        <Fmt5>{W}42:sExFlash.sHErase.Addr_u32	4	0</Fmt5>
+        <Fmt6>{W}42:sExFlash.sHWrite.Pending_u8	3	0</Fmt6>
+        <Fmt7>{W}42:sModem.IsDutyCycle_u8	3	0</Fmt7>
+        <Fmt8>{W}42:sOnFlash.Status_u8	3	0</Fmt8>
+        <Fmt9>{W}42:sSimCommon.sGPS.Status_u8	3	0</Fmt9>
+        <Fmt10>{W}42:sSimVar.IsRunningATcmd_u8	3	0</Fmt10>
+    </watch_formats>
     <Trace2>
         <Enabled>0</Enabled>
         <ShowSource>0</ShowSource>
@@ -110,6 +140,13 @@
         <ShowTimeSum>1</ShowTimeSum>
         <SumSortOrder>0</SumSortOrder>
     </EventLog>
+    <DisassembleMode>
+        <mode>0</mode>
+    </DisassembleMode>
+    <Breakpoints2>
+        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\user_app\user_app_mem\user_app_mem.c}.0.1" 0 0 1 "" 0 "" 0</Bp0>
+        <Count>1</Count>
+    </Breakpoints2>
     <TermIOLog>
         <LoggingEnabled>_ 0</LoggingEnabled>
         <LogFile>_ ""</LogFile>
@@ -119,6 +156,12 @@
         <LogFile>_ ""</LogFile>
         <Category>_ 0</Category>
     </LogFile>
+    <Aliases>
+        <A0>_ "E:\6.2023\3.container_gsm_gps\Drivers\STM32L1xx_HAL_Driver\Src\stm32l1xx_hal_adc.c" ""</A0>
+        <A1>_ "E:\8.2023\3.GSM_Container\Drivers\STM32L1xx_HAL_Driver\Src\stm32l1xx_hal_adc.c" ""</A1>
+        <Count>2</Count>
+        <SuppressDialog>0</SuppressDialog>
+    </Aliases>
     <DriverProfiling>
         <Enabled>0</Enabled>
         <Mode>3</Mode>
@@ -132,14 +175,4 @@
     <CallStackStripe>
         <ShowTiming>1</ShowTiming>
     </CallStackStripe>
-    <DisassembleMode>
-        <mode>0</mode>
-    </DisassembleMode>
-    <Breakpoints2>
-        <Count>0</Count>
-    </Breakpoints2>
-    <Aliases>
-        <Count>0</Count>
-        <SuppressDialog>0</SuppressDialog>
-    </Aliases>
 </settings>

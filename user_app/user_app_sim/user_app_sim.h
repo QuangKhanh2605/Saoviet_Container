@@ -6,6 +6,9 @@
 
 
 #include "user_util.h"
+
+#include "user_define.h"
+
 #include "user_sim.h"
 #include "user_mqtt.h"
 
@@ -16,19 +19,32 @@
 typedef enum
 {
     _EVENT_SIM_SEND_MESS,      
-    _EVENT_SIM_SEND_PING,      
+    _EVENT_SIM_SEND_PING,  
+    _EVENT_SIM_REQ_GPS,
+    _EVENT_SIM_GET_GPS,
     
 	_EVENT_END_SIM,
 }eKindsEventSim;
 
 
+typedef struct
+{
+    sData       sDataFlashSim;
+    sData       sDataGPS;
+    uint8_t     IsGetGPS_u8;           
+}sAppSimVariable;
+
+
+
 extern sFuncCallBackModem  sModemCallBackToSimHandler;
 extern sEvent_struct sEventAppSim []; 
-
+extern sAppSimVariable sAppSimVar;
 
 /*================ Func =================*/
 uint8_t     _Cb_Event_Sim_Send_Ping (uint8_t event);
 uint8_t     _Cb_Event_Sim_Send_Mess (uint8_t event);
+uint8_t     _Cb_Event_Sim_Req_GPS (uint8_t event);
+uint8_t     _Cb_Event_Sim_Get_GPS (uint8_t event);
 //
 void        AppSim_Init (void);
 uint8_t     AppSim_Task(void);
@@ -46,6 +62,11 @@ void        AppSim_Process_Downl_Mess (sData *sUartSim);
 void        AppSim_Process_Sms (sData *sUartSim);
 sData       * AppSim_Get_Firmware_Version (void);
 
+
+void        AppSim_Get_Data_From_Flash (uint8_t MessType, uint8_t *pData, uint16_t Length);
+void        AppSim_Push_Mess_To_Flash (uint8_t TypeData, uint8_t PartAorB, uint8_t *pData, uint16_t Length);
+
+void        AppSim_Unmark_Mess (uint8_t TypeMess);
 
 #endif
 

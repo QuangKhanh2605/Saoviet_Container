@@ -10,6 +10,9 @@
 
 #include "user_util.h"
 
+#include "usart.h"
+#include "queue_p.h"
+
 #include "event_driven.h"
 #include "user_sim_common.h"
 
@@ -51,6 +54,8 @@
 
 
 /*================Define================*/
+#define SIM_MAX_ITEM_QUEUE  50
+
 #define SIM_CMD_RETRY		2
 #define SIM_CMD_FREQ		50
 #define SIM_CMD_TIMEOUT		10000
@@ -124,6 +129,8 @@ typedef struct
     
     uint8_t     *ModePower_u8;              //SaveMode;  Connect Continue
     uint8_t     IsUpdateFinish_u8;
+    uint8_t     IsRunningATcmd_u8;
+    uint32_t    LandMarkSendAT_u32;
 }StructSimVariable;
 
 
@@ -161,7 +168,7 @@ extern sData sUartSim;
 extern StructSimVariable    sSimVar;
 extern sEvent_struct        sEventSim[];
 extern sFuncCallBackModem   *sFuncCBModem;
-
+extern Struct_Queue_Type    qSimStep;
 /*==============Function==================*/
 uint8_t 	fPushSimStepToQueue(uint8_t sim_step);
 uint8_t 	fPushBlockSimStepToQueue(uint8_t *block_sim_step, uint8_t size);
@@ -204,5 +211,8 @@ uint8_t 	Sim_Task(void);
 
 uint8_t     Sim_Analys_Error (void);
 void        Sim_Defaul_Struct_GPS (void);
+void        Sim_Clear_Queue_Step (void);
+
+
 
 #endif /* USER_SIM_H_ */

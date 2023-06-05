@@ -46,7 +46,7 @@ main.pbi: E:\8.2023\3.GSM_Container\Core\Src\main.c \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\spi.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\usart.h \
   E:\8.2023\3.GSM_Container\EWARM/../Core/Inc\gpio.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_main\user_app_main.h \
+  E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_app_common\user_app_comm.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_util\user_util.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_app\user_uart\user_uart.h \
   E:\8.2023\3.GSM_Container\EWARM\..\user_eventdriven\event_driven.h

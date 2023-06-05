@@ -23,8 +23,14 @@
 
 /* Internal voltage reference, parameter VREFINT_CAL*/
 #if defined (STM32L433xx) 
-    #define VREFINT_CAL         ((uint16_t*) ((uint32_t) 0x1FFF75AA))
-#else
+    #define VREFINT_CAL         ((uint16_t*) ((uint32_t) 0x1FFF75AA)) 
+#endif
+
+#if defined (STM32L151xC) 
+    #define VREFINT_CAL         ((uint16_t*) ((uint32_t) 0x1FF800F8))  
+#endif
+
+#if defined (STM32L433xx) 
     #define VREFINT_CAL         ((uint16_t*) ((uint32_t) 0x1FF80078))
     /* Internal temperature sensor, parameter TS_CAL1: TS ADC raw data acquired at
      *a temperature of 110 DegC (+-5 DegC), VDDA = 3.3 V (+-10 mV). */

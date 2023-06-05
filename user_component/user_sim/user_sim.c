@@ -7,16 +7,11 @@
 #include "string.h"
      
 #include "user_sim.h"
-#include "usart.h"
-#include "queue_p.h"
 
 #include "user_timer.h"
 #include "user_string.h"
 
-#include "user_internal_mem.h"
-#include "user_external_mem.h"
-     
-   
+#include "user_internal_mem.h"  
      
      
 /*=========================var struct====================*/
@@ -89,7 +84,7 @@ sFuncCallbackHandlerSim     sSimCallBackHandler =
 };
 
 
-static uint8_t aQSimStepComtrol[50];
+static uint8_t aQSimStepComtrol[SIM_MAX_ITEM_QUEUE];
 Struct_Queue_Type qSimStep;
 
 
@@ -114,6 +109,8 @@ static uint8_t fevent_sim_at_send_handler(uint8_t event)
             
         if (sim_step < SIM_STEP_END)
         {
+            sSimVar.IsRunningATcmd_u8 = true;
+            sSimVar.LandMarkSendAT_u32 = RtCountSystick_u32;
             //Neu lenh Out Data mode -> Dieu khien chan DTR
             if (sim_step == SIM_STEP_OUT_DATA_MODE)
             {
@@ -129,11 +126,6 @@ static uint8_t fevent_sim_at_send_handler(uint8_t event)
                 }
             }
             
-            //Lenh AT binh thuong timeout 10s. Lenh AT TCP timeout 60s.   
-            if (SIM_CHECK_STEP_LONG_TIMEOUT(sim_step) == TRUE)
-                UTIL_TIMER_SetPeriod(&TimerSendTimeout, SIM_TCP_TIMEOUT);
-            else
-                UTIL_TIMER_SetPeriod(&TimerSendTimeout, SIM_CMD_TIMEOUT);
             //Increase Num At Precess
             sSimVar.NumATProcess_u8++;
             //Get Struct AT Cmd
@@ -152,10 +144,20 @@ static uint8_t fevent_sim_at_send_handler(uint8_t event)
                 sSimVar.RespStatus_u8 = TRUE;
             } else
             {
+                //Lenh AT binh thuong timeout 10s. Lenh AT TCP timeout 60s.   
+                if (SIM_CHECK_STEP_LONG_TIMEOUT(sim_step) == TRUE)
+                    UTIL_TIMER_SetPeriod(&TimerSendTimeout, SIM_TCP_TIMEOUT);
+                else
+                    UTIL_TIMER_SetPeriod(&TimerSendTimeout, SIM_CMD_TIMEOUT);
+                
                 UTIL_TIMER_Start(&TimerSendTimeout);
                 //Increase Retry in case need check AT cmd
                 sSimVar.NumRetry_u8++;
             }
+        } else
+        {
+            //Neu dang k xu lý at nao: -> Cho phep active khi push lenh
+            sSimVar.IsRunningATcmd_u8 = false;
         }
     } else
     {
@@ -252,11 +254,11 @@ static uint8_t fevent_sim_at_send_timeout_handler(uint8_t event)
     UTIL_TIMER_Stop(&TimerSendTimeout);
 	//Get step Timeout and print to debug step timeout
 	StepNow = Sim_Get_Step_From_Queue(0);
-	UTIL_Print_Number(StepNow);
+	UTIL_Printf_Dec(DBLEVEL_M, StepNow);
 
     //Get Struct AT Cmd
     sATCmd = SIM_GET_AT_CMD(StepNow); 
-    UTIL_Log( (uint8_t *) sATCmd->at_string, strlen(sATCmd->at_string) );
+    UTIL_Log( DBLEVEL_M, (uint8_t *) sATCmd->at_string, strlen(sATCmd->at_string) );
     
     if (sSimVar.NumRetry_u8 >= SIM_CMD_RETRY)
     {
@@ -267,7 +269,7 @@ static uint8_t fevent_sim_at_send_timeout_handler(uint8_t event)
     {
         //Back AT in queue and Send Again
         if (Sim_Back_Current_AT(sSimVar.NumATProcess_u8 - 1) == 1)
-        {
+        {    
             //Active event Send AT
             sSimVar.NumATProcess_u8 = 0;
             fevent_active(sEventSim, _EVENT_SIM_AT_SEND);
@@ -335,13 +337,13 @@ static uint8_t fevent_sim_turn_on_handler(uint8_t event)
             //Check Mode 
             if ((sSimVar.ModeConnectNow_u8 == MODE_CONNECT_DATA_MAIN) || (sSimVar.ModeConnectNow_u8 == MODE_CONNECT_DATA_BACKUP))
             {
-                qQueue_Clear(&qSimStep);
+                Sim_Clear_Queue_Step();
                 fPushBlockSimStepToQueue(aSimStepBlockInit, sizeof(aSimStepBlockInit));  
                 fPushBlockSimStepToQueue(aSimStepBlockNework, sizeof(aSimStepBlockNework));
                 fPushBlockSimStepToQueue(aSimStepBlockConnect, sizeof(aSimStepBlockConnect));
             } else if (sSimVar.ModeConnectNow_u8 == MODE_CONNECT_HTTP)
             {
-                qQueue_Clear(&qSimStep);
+                Sim_Clear_Queue_Step();
                 fPushBlockSimStepToQueue(aSimStepBlockInit, sizeof(aSimStepBlockInit)); 
                 fPushBlockSimStepToQueue(aSimStepBlockHttpInit, sizeof(aSimStepBlockHttpInit));
                 fPushBlockSimStepToQueue(aSimStepBlockHttpRead, sizeof(aSimStepBlockHttpRead));
@@ -352,7 +354,7 @@ static uint8_t fevent_sim_turn_on_handler(uint8_t event)
             if ((sSimVar.ModeConnectNow_u8 != MODE_CONNECT_DATA_MAIN) && (sSimVar.ModeConnectNow_u8 != MODE_CONNECT_DATA_BACKUP))
             {
                 sSimVar.ModeConnectNow_u8 = sSimVar.ModeConnectLast_u8;
-                qQueue_Clear(&qSimStep);
+                Sim_Clear_Queue_Step();
                 fPushBlockSimStepToQueue(aSimStepBlockInit, sizeof(aSimStepBlockInit));
                 fPushBlockSimStepToQueue(aSimStepBlockNework, sizeof(aSimStepBlockNework));
                 fPushBlockSimStepToQueue(aSimStepBlockConnect, sizeof(aSimStepBlockConnect));
@@ -363,7 +365,7 @@ static uint8_t fevent_sim_turn_on_handler(uint8_t event)
             if ( (*sSimVar.ModePower_u8 == _POWER_MODE_SAVE) ||   \
                  ( (*sSimVar.ModePower_u8 == _POWER_MODE_ONLINE) && (sFuncCBModem->pSim_Reset_MCU() == 0) ) )
             {
-                qQueue_Clear(&qSimStep);
+                Sim_Clear_Queue_Step();
                 fPushBlockSimStepToQueue(aSimStepBlockInit, sizeof(aSimStepBlockInit));
                 fPushBlockSimStepToQueue(aSimStepBlockNework, sizeof(aSimStepBlockNework));
                 fPushBlockSimStepToQueue(aSimStepBlockConnect, sizeof(aSimStepBlockConnect));
@@ -414,9 +416,9 @@ static uint8_t fevent_sim_power_off_handler(uint8_t event)
 {
     uint8_t i = 0;
     
-    UTIL_Log((uint8_t*) "=Power off SIM=\r\n", 17);
+    UTIL_Log_Str(DBLEVEL_M, "=Power off SIM=\r\n" );
     //Neu k hard reset duoc se tiep tuc vao hard Reset lai ->Vi no vao day se fail Power off ->hard Reset
-    qQueue_Clear(&qSimStep);
+    Sim_Clear_Queue_Step();
     //clear event sim
     for (i = 0; i < _EVENT_SIM_END; i++)
         sEventSim[i].e_status = 0;
@@ -429,7 +431,7 @@ static uint8_t fevent_sim_power_off_handler(uint8_t event)
     {
         if ((sFuncCBModem->pSim_Reset_MCU () == 0) && ( *sSimVar.ModePower_u8 == _POWER_MODE_ONLINE ) )
         {
-            qQueue_Clear(&qSimStep);
+            Sim_Clear_Queue_Step();
             fPushBlockSimStepToQueue(aSimStepBlockInit, sizeof(aSimStepBlockInit));
             fPushBlockSimStepToQueue(aSimStepBlockNework, sizeof(aSimStepBlockNework));
             fPushBlockSimStepToQueue(aSimStepBlockConnect, sizeof(aSimStepBlockConnect));
@@ -448,7 +450,7 @@ uint8_t fPushSimStepToQueue(uint8_t sim_step)
 	if (qQueue_Send(&qSimStep, (uint8_t *) &sim_step, _TYPE_SEND_TO_END) == 0)
 		return 0;
 
-	if (sEventSim[_EVENT_SIM_AT_SEND].e_status == 0)
+    if ((sSimVar.IsRunningATcmd_u8 == false ) || (Check_Time_Out(sSimVar.LandMarkSendAT_u32, 80000) == true) )
 		fevent_active(sEventSim, _EVENT_SIM_AT_SEND);
 
 	return 1;
@@ -509,7 +511,7 @@ uint8_t Sim_Check_Response(uint8_t sim_step) // alternative by ring buffer
     }
     
     //Printf debug
-    HAL_UART_Transmit(&uart_debug, sUartSim.Data_a8, sUartSim.Length_u16, 1000);
+    UTIL_Printf( DBLEVEL_M, sUartSim.Data_a8, sUartSim.Length_u16);
     
 	memset(&uartSimBuffReceive[0], 0, sizeof(uartSimBuffReceive));
 	sUartSim.Length_u16 = 0;
@@ -524,7 +526,7 @@ uint8_t Sim_Check_Response(uint8_t sim_step) // alternative by ring buffer
 
 static void OnTimerSendTimeOutEvent(void *context)
 {
-	PrintDebug(&uart_debug, (uint8_t*) "=Send AT Timeout=\r\n", 19, 1000);
+	UTIL_Printf_Str( DBLEVEL_M, "=Send AT Timeout=\r\n" );
 	fevent_active(sEventSim, _EVENT_SIM_AT_SEND_TIMEOUT);
 }
 
@@ -603,7 +605,7 @@ void Sim_Disable_All_Event (void)
 	for (i = 0; i < _EVENT_SIM_END; i++)
         sEventSim[i].e_status = 0;  
     
-    qQueue_Clear(&qSimStep);
+    Sim_Clear_Queue_Step();
     //Disable Timer TX
     UTIL_TIMER_Stop (&TimerSendTimeout);
     UTIL_TIMER_Stop (&TimerNextSendAT);
@@ -636,20 +638,26 @@ static void Sim_Process_URC_Callback (uint8_t Type)
     {
         case _SIM_COMM_URC_RESET_SIM: 
             //Print power down
-            UTIL_Log ((uint8_t *) "=URC POWER DOWN=\r\n", 18);
-            fevent_active(sEventSim, _EVENT_SIM_AT_SEND_TIMEOUT);   
+            UTIL_Log_Str (DBLEVEL_M, "=URC POWER DOWN=\r\n" );
+            fevent_active(sEventSim, _EVENT_SIM_AT_SEND_TIMEOUT);
+            
+            sSimVar.NumRetry_u8 = SIM_CMD_RETRY;
             break;
         case _SIM_COMM_URC_SIM_LOST: 
             //Sim Remove
-            UTIL_Log ((uint8_t *) "=URC SIM LOSST=\r\n", 17);
+            UTIL_Log_Str (DBLEVEL_M, "=URC SIM LOSST=\r\n" );
             fevent_active(sEventSim, _EVENT_SIM_AT_SEND_TIMEOUT);
+            sSimVar.NumRetry_u8 = SIM_CMD_RETRY;
             break;
         case _SIM_COMM_URC_CLOSED: 
             //Push lenh dong ket noi va Khoi dong lai
-            UTIL_Log ((uint8_t *) "=URC TCP CLOSE=\r\n", 17);
+            UTIL_Log_Str (DBLEVEL_M, "=URC TCP CLOSE=\r\n" );
 
             if (*sSimVar.ModePower_u8 == _POWER_MODE_ONLINE)
+            {
                 fevent_active(sEventSim, _EVENT_SIM_AT_SEND_TIMEOUT);  
+                sSimVar.NumRetry_u8 = SIM_CMD_RETRY;
+            }
             break;
         case _SIM_COMM_URC_CALLING: 
           
@@ -663,7 +671,7 @@ static void Sim_Process_URC_Callback (uint8_t Type)
             fPushBlockSimStepToQueue(aSimStepBlockSMS, sizeof(aSimStepBlockSMS)); 
             break;                     
         case _SIM_COMM_URC_ERROR: 
-            PrintDebug (&uart_debug, (uint8_t *) "=URC ERROR=\r\n", 13, 1000);
+            UTIL_Printf_Str ( DBLEVEL_M, "=URC ERROR=\r\n" );
             
             StepHandle = Sim_Get_Step_From_Queue(0);
             if (EC200U_Check_Step_Skip_Error(StepHandle) == true)
@@ -695,6 +703,7 @@ static uint8_t Sim_Process_AT_CallBack (uint8_t Type)
             break; 
         case _SIM_COMM_EVENT_SIM_CARD:
         case _SIM_COMM_EVENT_GET_STIME: 
+        case _SIM_COMM_EVENT_GPS_OK:
         case _SIM_COMM_EVENT_TCP_SEND_1:
         case _SIM_COMM_EVENT_TCP_SEND_2:
         case _SIM_COMM_EVENT_CONN_MQTT_1:
@@ -740,7 +749,7 @@ static void Sim_Check_Change_Server (void)
             else if (sSimVar.ModeConnectNow_u8 == MODE_CONNECT_DATA_MAIN)
                 sSimVar.ModeConnectNow_u8 = MODE_CONNECT_DATA_BACKUP;
             
-            UTIL_Log((uint8_t *) "=Change Server Infor=\r\n", 23);
+            UTIL_Log_Str(DBLEVEL_M, "=Change Server Infor=\r\n" );
             //Mark Count HRS
             LastCountHdReset_u8 = sSimVar.CountHardReset_u8;
         }
@@ -749,10 +758,12 @@ static void Sim_Check_Change_Server (void)
 
 static void Sim_Process_AT_Failure (void)
 {
+    MX_USART2_UART_Init();
+    __HAL_UART_ENABLE_IT(&uart_sim, UART_IT_RXNE);
     //Tang soft Reset
 	sSimVar.CountSoftReset_u8++;
     sSimVar.ConnSerStatus_u8 = FALSE;
-	qQueue_Clear(&qSimStep);
+	Sim_Clear_Queue_Step();
 	//Neu Soft Reset > 2
 	if (sSimVar.CountSoftReset_u8 < MAX_SOFT_RESET)
 	{
@@ -780,7 +791,7 @@ static void Sim_Process_AT_Failure (void)
 			case _GR_CLOSE_TCP:
 				break;
             case _GR_READ_HTTP:
-                qQueue_Clear(&qSimStep);
+                Sim_Clear_Queue_Step();
                 Sim_event_active(_EVENT_SIM_TURN_ON);
                 break;
 			default:
@@ -835,7 +846,7 @@ uint8_t SIM_POWER_ON(void)
 	switch (sSimVar.StepPowerOn_u8)
 	{
 		case 0:      
-			UTIL_Log((uint8_t*) "\r\n=POWER ON SIM=\r\n", 18);
+			UTIL_Log_Str(DBLEVEL_M, "\r\n=POWER ON SIM=\r\n" );
             MX_USART2_UART_Init();
             __HAL_UART_ENABLE_IT(&uart_sim, UART_IT_RXNE);
             SIM_PW_OFF1;
@@ -873,7 +884,7 @@ uint8_t SIM_POWER_ON(void)
 			break;
 		default:
 			sSimVar.StepPowerOn_u8 = 0;
-            PrintDebug(&uart_debug, (uint8_t*) "\r\n=POWER ON SIM OK=\r\n", 21, 1000);
+            UTIL_Printf_Str( DBLEVEL_M, "\r\n=POWER ON SIM OK=\r\n" );
 			return 1;
 	}
 
@@ -1157,7 +1168,7 @@ void Sim_Init(void)
 	Init_IP_Port_Server();
     Init_Server_BackUp_Infor();
     //Init Queue Sim Step
-    qQueue_Create (&qSimStep, 50, sizeof (uint8_t), (uint8_t *) &aQSimStepComtrol); 
+    qQueue_Create (&qSimStep, SIM_MAX_ITEM_QUEUE, sizeof (uint8_t), (uint8_t *) &aQSimStepComtrol); 
     //Set Callback Handler to L506,...
     Sim_Init_Handler_Process();
 	//Khoi tao timer moudle sim: TỉmerATsend, TimerATSendOK...
@@ -1206,31 +1217,31 @@ uint8_t Sim_Analys_Error (void)
 {
     if (sSimCommon.RxPinReady_u8 == FALSE)  
     {
-        PrintDebug(&uart_debug, (uint8_t*) "u_sim: error power or rx pin uart\r\n", 35, 1000);
+        UTIL_Printf_Str( DBLEVEL_M, "u_sim: error power or rx pin uart\r\n" );
         return _SIM_ERROR_PIN_RX;
     }
     
     if (sSimCommon.TxPinReady_u8 == FALSE)  
     {
-        PrintDebug(&uart_debug, (uint8_t*) "u_sim: error tx pin uart\r\n", 26, 1000);
+        UTIL_Printf_Str( DBLEVEL_M, "u_sim: error tx pin uart\r\n" );
         return _SIM_ERROR_PIN_TX;
     }
     
     if (sSimCommon.CallReady_u8 == FALSE)  
     {
-        PrintDebug(&uart_debug, (uint8_t*) "u_sim: error card sim\r\n", 23, 1000);
+        UTIL_Printf_Str( DBLEVEL_M, "u_sim: error card sim\r\n" );
         return _SIM_ERROR_CARD;
     }
     
     if (sSimCommon.NetReady_u8 == FALSE)  
     {
-        PrintDebug(&uart_debug, (uint8_t*) "u_sim: error network\r\n", 22, 1000);
+        UTIL_Printf_Str( DBLEVEL_M, "u_sim: error network\r\n" );
         return _SIM_ERROR_ATTACH;
     }
     
     if (sSimCommon.ServerReady_u8 == FALSE)  
     {
-        PrintDebug(&uart_debug, (uint8_t*) "u_sim: error connect server\r\n", 29, 1000);
+        UTIL_Printf_Str( DBLEVEL_M, "u_sim: error connect server\r\n" );
         return _SIM_ERROR_TCP;
     }
     
@@ -1241,4 +1252,11 @@ uint8_t Sim_Analys_Error (void)
 void Sim_Defaul_Struct_GPS (void)
 {
     Sim_Common_Default_Struct_GPS();
+}
+
+
+void Sim_Clear_Queue_Step (void)
+{
+    sSimVar.IsRunningATcmd_u8 = false;
+    qQueue_Clear(&qSimStep);
 }
