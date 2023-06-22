@@ -156,7 +156,8 @@ static uint8_t _Cb_On_Flash_Check_Queue (uint8_t event)
         }
     }
     
-    fevent_enable( sEventOnChipFlash, event);
+    if ( (qGet_Number_Items (&qOnFlashWrite) != 0) || (qGet_Number_Items (&qOnFlashRead) != 0) )
+        fevent_enable( sEventOnChipFlash, event);
     
     return 1;
 }

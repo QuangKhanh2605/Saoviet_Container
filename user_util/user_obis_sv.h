@@ -64,5 +64,12 @@
 #define OBIS_ENVI_HUMI_1            0x72
 #define OBIS_ENVI_HUMI_2            0x6E
 
+#define OBIS_ENVI_CONNECT_STATUS    0xD4
+#define OBIS_ENVI_ID_SERVER         0x0E
+#define OBIS_ENVI_CONFIG_IVT        0x99
+#define OBIS_ENVI_RUN_STOP_IVT      0x88
+#define OBIS_ENVI_ADDR_READ_IVT     0x87
+#define OBIS_ENVI_ADDR_CONFIG_IVT   0x86
+#define OBIS_ENVI_ADDR_RUN_IVT      0x85   
 
 #endif

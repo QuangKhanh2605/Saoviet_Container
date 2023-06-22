@@ -22,7 +22,10 @@ extern sData sUartDebug;
 /*==================Function==================*/
 void Init_Uart_Module (void);
 
-
+void Init_Uart_Sim_Rx_IT (void);
+void Init_Uart_Debug_Rx_IT (void);
+void Init_Uart_485_Rx_IT (void);
+void DeInit_Uart_Sim_Rx_IT (void);
 
 
 #endif /* USER_UART_H_ */

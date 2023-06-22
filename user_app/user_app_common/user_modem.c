@@ -122,6 +122,27 @@ uint8_t aDCU_ID[MAX_DCU_ID_LENGTH] = DEVICE_ID;
         .MaxRecord_u16      = CAT_MAX_MESS_LOG_SAVE,
         .SizeRecord_u16     = CAT_SIZE_DATA_LOG,
     };
+    
+    //Struct GPS Data
+    sRecordMemoryManager     sRecGPS =    
+    {
+        .AddAStart_u32      = CAT_ADDR_GPS_START,   
+        .AddAStop_u32       = CAT_ADDR_GPS_STOP,
+        
+        .Offset_u32         = 0,
+        
+        .AddBStart_u32      = CAT_ADDR_GPS_START,   
+        .AddBStop_u32       = CAT_ADDR_GPS_STOP,
+            
+        .AddIndexSend_u32   = ADDR_INDEX_GPS_SEND,   
+        .AddIndexSave_u32   = ADDR_INDEX_GPS_SAVE,
+        
+        .SizeRecord_u16     = CAT_SIZE_DATA_GPS,
+        .MaxRecord_u16      = CAT_MAX_MESS_GPS_SAVE,     
+        
+        .IndexSend_u16      = 0,
+        .IndexSave_u16      = 0,
+    };
 #endif
 
 #ifdef EX_MEM_FLASH
@@ -198,13 +219,13 @@ uint8_t aDCU_ID[MAX_DCU_ID_LENGTH] = DEVICE_ID;
     //Struct GPS Data
     sRecordMemoryManager     sRecGPS =    
     {
-        .AddAStart_u32      = FLASH_ADDR_GPS_START,   
-        .AddAStop_u32       = FLASH_ADDR_GPS_STOP,
+        .AddAStart_u32      = FLASH_ADDR_GPS_A_START,   
+        .AddAStop_u32       = FLASH_ADDR_GPS_A_STOP,
         
-        .Offset_u32         = 0,
+        .Offset_u32         = FLASH_ADDR_GPS_OFFSET,
         
-        .AddBStart_u32      = FLASH_ADDR_GPS_START,   
-        .AddBStop_u32       = FLASH_ADDR_GPS_STOP,
+        .AddBStart_u32      = FLASH_ADDR_GPS_B_START,   
+        .AddBStop_u32       = FLASH_ADDR_GPS_B_STOP,
             
         .AddIndexSend_u32   = ADDR_INDEX_GPS_SEND,   
         .AddIndexSave_u32   = ADDR_INDEX_GPS_SAVE,
@@ -440,10 +461,10 @@ void Modem_Deinit_Peripheral (void)
 	ADC_Desequence_Powerhungry_Channels();
     
     HAL_ADC_DeInit(&hadc);
-        
-    __HAL_UART_DISABLE_IT(&uart_sim, UART_IT_RXNE);
+       
     HAL_UART_DeInit(&uart_sim);
-
+    
+    DeInit_Uart_Sim_Rx_IT();
 }
 
 
@@ -453,8 +474,8 @@ void Modem_Init_Peripheral (void)
     //Init ADC again
     AdcInitialized = 0; 
     
-    MX_USART1_UART_Init();
-    __HAL_UART_ENABLE_IT(&uart_sim, UART_IT_RXNE);
+    MX_USART2_UART_Init();
+    Init_Uart_Sim_Rx_IT();
 }
 
 void Modem_Init_Before_IRQ_Handle (void)

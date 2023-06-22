@@ -212,7 +212,7 @@ void     	mConnect_MQTT (void);
 void     	mSubcribe_MQTT (void);
 void        mPublish_MQTT (void);
 
-void        mData_MQTT (uint8_t MessType);
+void        mData_MQTT (uint8_t MessType, uint8_t Qos);
 uint8_t     mCheck_Empty_Mess (void);
 void        mRespond_Config_Server (uint8_t portNo, uint8_t *data, uint16_t length);
 

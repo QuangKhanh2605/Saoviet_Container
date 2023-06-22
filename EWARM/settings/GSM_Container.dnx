@@ -12,15 +12,15 @@
         <ByteLimit>50</ByteLimit>
     </Stack>
     <StLinkDriver>
-        <stlinkserialNo>49170881</stlinkserialNo>
+        <stlinkResetStyle>0</stlinkResetStyle>
+        <stlinkResetStrategy>2</stlinkResetStrategy>
+        <stlinkserialNo>31531457</stlinkserialNo>
         <stlinkfoundProbes />
         <CStepIntDis>_ 0</CStepIntDis>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
-        <stlinkResetStyle>0</stlinkResetStyle>
-        <stlinkResetStrategy>2</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>3892302416</Checksum>
+        <Checksum>2333597215</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -68,32 +68,62 @@
         <Fmt8>Struct_Queue_Type-NumWaiting_u8	3	0</Fmt8>
         <Fmt9>Struct_Queue_Type-SizeItem_u8	3	0</Fmt9>
         <Fmt10>sMemHandleWrite-Addr_u32	4	0</Fmt10>
-        <Fmt11>sMemoryManager-Status_u8	3	0</Fmt11>
-        <Fmt12>sRecordMemoryManager-AddAStart_u32	4	0</Fmt12>
-        <Fmt13>sRecordMemoryManager-AddAStop_u32	4	0</Fmt13>
-        <Fmt14>sRecordMemoryManager-AddA_u32	4	0</Fmt14>
-        <Fmt15>sRecordMemoryManager-AddBStart_u32	4	0</Fmt15>
-        <Fmt16>sRecordMemoryManager-AddBStop_u32	4	0</Fmt16>
-        <Fmt17>sRecordMemoryManager-AddB_u32	4	0</Fmt17>
-        <Fmt18>sRecordMemoryManager-AddIndexSave_u32	4	0</Fmt18>
-        <Fmt19>sRecordMemoryManager-AddIndexSend_u32	4	0</Fmt19>
-        <Fmt20>sRequestATcmd-Port_u8	3	0</Fmt20>
-        <Fmt21>sRequestATcmd-Status_u8	3	0</Fmt21>
-        <Fmt22>sRequestATcmd-TypeData_u8	3	0</Fmt22>
-        <Fmt23>structFloatValue-Unit_u16	4	0</Fmt23>
+        <Fmt11>sMemHandleWrite-Pending_u8	3	0</Fmt11>
+        <Fmt12>sMemHandleWrite-TypeData_u8	3	0</Fmt12>
+        <Fmt13>sMemoryManager-Status_u8	3	0</Fmt13>
+        <Fmt14>sRecordMemoryManager-AddAStart_u32	4	0</Fmt14>
+        <Fmt15>sRecordMemoryManager-AddAStop_u32	4	0</Fmt15>
+        <Fmt16>sRecordMemoryManager-AddA_u32	4	0</Fmt16>
+        <Fmt17>sRecordMemoryManager-AddBStart_u32	4	0</Fmt17>
+        <Fmt18>sRecordMemoryManager-AddBStop_u32	4	0</Fmt18>
+        <Fmt19>sRecordMemoryManager-AddB_u32	4	0</Fmt19>
+        <Fmt20>sRecordMemoryManager-AddIndexSave_u32	4	0</Fmt20>
+        <Fmt21>sRecordMemoryManager-AddIndexSend_u32	4	0</Fmt21>
+        <Fmt22>sRequestATcmd-Port_u8	3	0</Fmt22>
+        <Fmt23>sRequestATcmd-Status_u8	3	0</Fmt23>
+        <Fmt24>sRequestATcmd-TypeData_u8	3	0</Fmt24>
+        <Fmt25>struct &lt;Unnamed 217&gt;-ID_Iverter	4	0</Fmt25>
+        <Fmt26>struct &lt;Unnamed 217&gt;-Scale_Inverter	4	0</Fmt26>
+        <Fmt27>structFloatValue-Unit_u16	4	0</Fmt27>
     </struct_types>
     <watch_formats>
-        <Fmt0>{W}42:CountGetDataFail_u8	3	0</Fmt0>
-        <Fmt1>{W}42:MarkResetDaily	3	0</Fmt1>
-        <Fmt2>{W}42:sAppSimVar.IsGetGPS_u8	3	0</Fmt2>
-        <Fmt3>{W}42:sExFlash.Retry_u8	3	0</Fmt3>
-        <Fmt4>{W}42:sExFlash.Status_u8	3	0</Fmt4>
-        <Fmt5>{W}42:sExFlash.sHErase.Addr_u32	4	0</Fmt5>
-        <Fmt6>{W}42:sExFlash.sHWrite.Pending_u8	3	0</Fmt6>
-        <Fmt7>{W}42:sModem.IsDutyCycle_u8	3	0</Fmt7>
-        <Fmt8>{W}42:sOnFlash.Status_u8	3	0</Fmt8>
-        <Fmt9>{W}42:sSimCommon.sGPS.Status_u8	3	0</Fmt9>
-        <Fmt10>{W}42:sSimVar.IsRunningATcmd_u8	3	0</Fmt10>
+        <Fmt0>{W}1:i	3	0</Fmt0>
+        <Fmt1>{W}1:j	3	0</Fmt1>
+        <Fmt2>{W}42:CountGetDataFail_u8	3	0</Fmt2>
+        <Fmt3>{W}42:ID_server	4	0</Fmt3>
+        <Fmt4>{W}42:ID_server_u32	4	0</Fmt4>
+        <Fmt5>{W}42:MarkResetDaily	3	0</Fmt5>
+        <Fmt6>{W}42:TaskStatus_u8	3	0</Fmt6>
+        <Fmt7>{W}42:c	3	0</Fmt7>
+        <Fmt8>{W}42:check	3	0</Fmt8>
+        <Fmt9>{W}42:config_IVT	3	0</Fmt9>
+        <Fmt10>{W}42:config_IVT_u8	3	0</Fmt10>
+        <Fmt11>{W}42:config_KDE	3	0</Fmt11>
+        <Fmt12>{W}42:connect_IVT	4	0</Fmt12>
+        <Fmt13>{W}42:connect_IVT_u8	4	0</Fmt13>
+        <Fmt14>{W}42:connect_KDE	4	0</Fmt14>
+        <Fmt15>{W}42:count	3	0</Fmt15>
+        <Fmt16>{W}42:count_error	3	0</Fmt16>
+        <Fmt17>{W}42:count_success	3	0</Fmt17>
+        <Fmt18>{W}42:max	3	0</Fmt18>
+        <Fmt19>{W}42:permit_run_stop_485_IVT	3	0</Fmt19>
+        <Fmt20>{W}42:response_KDE200	3	0</Fmt20>
+        <Fmt21>{W}42:run_stop_IVT	4	0</Fmt21>
+        <Fmt22>{W}42:run_stop_KDE	3	0</Fmt22>
+        <Fmt23>{W}42:sAppMem.PendingNewMess_u8	3	0</Fmt23>
+        <Fmt24>{W}42:sAppSimVar.IsGetGPS_u8	3	0</Fmt24>
+        <Fmt25>{W}42:sAppSimVar.sGPS.Index_u8	3	0</Fmt25>
+        <Fmt26>{W}42:sAppSimVar.sGPS.Status_u8	3	0</Fmt26>
+        <Fmt27>{W}42:sExFlash.Retry_u8	3	0</Fmt27>
+        <Fmt28>{W}42:sExFlash.Status_u8	3	0</Fmt28>
+        <Fmt29>{W}42:sExFlash.sHErase.Addr_u32	4	0</Fmt29>
+        <Fmt30>{W}42:sExFlash.sHWrite.Pending_u8	3	0</Fmt30>
+        <Fmt31>{W}42:sModem.IsDutyCycle_u8	3	0</Fmt31>
+        <Fmt32>{W}42:sOnFlash.Status_u8	3	0</Fmt32>
+        <Fmt33>{W}42:sSimCommon.PowerStatus_u8	3	0</Fmt33>
+        <Fmt34>{W}42:sSimCommon.sGPS.Status_u8	3	0</Fmt34>
+        <Fmt35>{W}42:sSimVar.IsRunningATcmd_u8	3	0</Fmt35>
+        <Fmt36>{W}42:test	4	0</Fmt36>
     </watch_formats>
     <Trace2>
         <Enabled>0</Enabled>
@@ -140,28 +170,15 @@
         <ShowTimeSum>1</ShowTimeSum>
         <SumSortOrder>0</SumSortOrder>
     </EventLog>
-    <DisassembleMode>
-        <mode>0</mode>
-    </DisassembleMode>
-    <Breakpoints2>
-        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\user_app\user_app_mem\user_app_mem.c}.0.1" 0 0 1 "" 0 "" 0</Bp0>
-        <Count>1</Count>
-    </Breakpoints2>
-    <TermIOLog>
-        <LoggingEnabled>_ 0</LoggingEnabled>
-        <LogFile>_ ""</LogFile>
-    </TermIOLog>
     <LogFile>
         <LoggingEnabled>_ 0</LoggingEnabled>
         <LogFile>_ ""</LogFile>
         <Category>_ 0</Category>
     </LogFile>
-    <Aliases>
-        <A0>_ "E:\6.2023\3.container_gsm_gps\Drivers\STM32L1xx_HAL_Driver\Src\stm32l1xx_hal_adc.c" ""</A0>
-        <A1>_ "E:\8.2023\3.GSM_Container\Drivers\STM32L1xx_HAL_Driver\Src\stm32l1xx_hal_adc.c" ""</A1>
-        <Count>2</Count>
-        <SuppressDialog>0</SuppressDialog>
-    </Aliases>
+    <TermIOLog>
+        <LoggingEnabled>_ 0</LoggingEnabled>
+        <LogFile>_ ""</LogFile>
+    </TermIOLog>
     <DriverProfiling>
         <Enabled>0</Enabled>
         <Mode>3</Mode>
@@ -175,4 +192,17 @@
     <CallStackStripe>
         <ShowTiming>1</ShowTiming>
     </CallStackStripe>
+    <DisassembleMode>
+        <mode>0</mode>
+    </DisassembleMode>
+    <Breakpoints2>
+        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\user_app\user_app_mem\user_app_mem.c}.1104.1" 0 0 1 "" 0 "" 0</Bp0>
+        <Count>1</Count>
+    </Breakpoints2>
+    <Aliases>
+        <A0>_ "E:\6.2023\3.container_gsm_gps\Drivers\STM32L1xx_HAL_Driver\Src\stm32l1xx_hal_adc.c" ""</A0>
+        <A1>_ "E:\8.2023\3.GSM_Container\Drivers\STM32L1xx_HAL_Driver\Src\stm32l1xx_hal_adc.c" ""</A1>
+        <Count>2</Count>
+        <SuppressDialog>0</SuppressDialog>
+    </Aliases>
 </settings>

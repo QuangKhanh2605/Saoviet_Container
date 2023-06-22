@@ -54,6 +54,9 @@
 #define _VLEVEL_DEBUG   DBLEVEL_M
 
 
+#define pi 3.14159265358979323846
+
+
 #define UTILS_INIT_CRITICAL_SECTION()
 
 /**
@@ -134,5 +137,14 @@ void            UTIL_Printf (uint8_t Level, uint8_t *pData, uint16_t Length);
 void            UTIL_Printf_Str (uint8_t Level, const char *str);
 void            UTIL_Printf_Hex (uint8_t Level, uint8_t *pData, uint16_t Length);
 void            UTIL_Printf_Dec (uint8_t Level, uint32_t Number);
+
+
+double          UTIL_Rad_2Deg(double rad); 
+double          UTIL_Deg_2Rad (double deg);
+double          UTIL_Cacul_Distance (double lat1, double lon1, double lat2, double lon2, char unit); 
+
+
+
+
 
 #endif

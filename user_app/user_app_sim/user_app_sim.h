@@ -15,6 +15,14 @@
 
 #define USING_APP_SIM   
 
+
+/*GPS: So vi tri lay mau kiem tra di chuyen*/
+#define MAX_SAMPLE_GPS      12
+
+/*GPS: Khoang cach so sanh di chuyen*/
+#define DISTANCE_GPS_MOVE   50
+
+
 /*================ Var struct =================*/
 typedef enum
 {
@@ -29,9 +37,32 @@ typedef enum
 
 typedef struct
 {
+    uint8_t     aData[30];
+    uint8_t     Length_u8;
+    double      Lat;
+    double      Long;
+}sGpsData;
+
+typedef struct
+{
+    sGpsData    sLocation[MAX_SAMPLE_GPS];
+    sGpsData    sLocaOrigin;
+    
+    uint8_t     Status_u8;
+    uint8_t     Index_u8;
+    uint8_t     IsInit_u8;
+    uint8_t     MarkFirstError_u8;
+    uint16_t    CountError_u16;
+}sGpsInformation;
+
+
+typedef struct
+{
     sData       sDataFlashSim;
     sData       sDataGPS;
-    uint8_t     IsGetGPS_u8;           
+    
+    sGpsInformation sGPS;
+    uint8_t     IsFinishHandleSim_u8;
 }sAppSimVariable;
 
 
@@ -67,6 +98,18 @@ void        AppSim_Get_Data_From_Flash (uint8_t MessType, uint8_t *pData, uint16
 void        AppSim_Push_Mess_To_Flash (uint8_t TypeData, uint8_t PartAorB, uint8_t *pData, uint16_t Length);
 
 void        AppSim_Unmark_Mess (uint8_t TypeMess);
+
+void        AppSim_GPS_OK (void);
+uint8_t     AppSim_GPS_Extract_Lat_Long (uint8_t *pData, uint16_t Length, double *Lat, double *Long);
+
+uint8_t     AppSim_GPS_Check_Moving (void);
+void        AppSim_GPS_Packet_Record (uint8_t CheckResult);
+void        AppSim_GPS_Error (void);
+
+void        AppSim_Start_Module_Sim (void);
+
+
+
 
 #endif
 

@@ -30,7 +30,7 @@ sEvent_struct sEventAppTempH [] =
     { _EVENT_CONTROL_LED2,		1, 0, 500,      _Cb_Temh_Control_Led2 }, 
     { _EVENT_CONTROL_LED3,		1, 0, 500,      _Cb_Temh_Control_Led3 }, 
     
-    { _EVENT_TEST_RS485,		0, 0, 1000,     _Cb_Test_RS485 }, 
+    { _EVENT_TEST_RS485,		1, 0, 250,     _Cb_Test_RS485 }, 
 };
             
     
@@ -70,7 +70,7 @@ static const uint16_t LED_PIN[3] = {LED_1_Pin, LED_2_Pin, LED_3_Pin};
 
 static uint8_t _Cb_Temh_Entry (uint8_t event)
 {
-    fevent_active(sEventAppTempH, _EVENT_POWER_ON_NODE);
+//    fevent_active(sEventAppTempH, _EVENT_POWER_ON_NODE);
 
 	return 1;
 }
@@ -89,6 +89,7 @@ static uint8_t _Cb_Power_On_Temh (uint8_t event)
             }
             break;
         case 1:
+            UTIL_Printf_Str(DBLEVEL_M, "u_app_temh: power on again!" );
             HAL_GPIO_WritePin(GPIOC, ON_OFF_12V_Pin, GPIO_PIN_RESET);
             break;
         default: //Power on and start measure
@@ -174,7 +175,7 @@ static uint8_t _Cb_Temh_Read_Value (uint8_t event)
                 {
                     //Init Uart again
                     MX_USART1_UART_Init();
-                    __HAL_UART_ENABLE_IT(&UART_485, UART_IT_RXNE);
+                    Init_Uart_485_Rx_IT();
                 }
                                       
                 fevent_enable(sEventAppTempH, event);
@@ -215,16 +216,8 @@ static uint8_t _Cb_Temh_Read_Value (uint8_t event)
         } else
         {         
             IndexSlave = 0;
-            if (AppTemh_Check_Status_TempH() == true)
-            {
-                fevent_enable(sEventAppTempH, _EVENT_TEMH_LOG_TSVH);
-            } else
-            {
-                UTIL_Printf_Str(DBLEVEL_M, "u_app_temh: power on again!" );
-                sTempHumi.PowerStatus_u8 = false;
-                //Reset nguon
-                fevent_active(sEventAppTempH, _EVENT_POWER_ON_NODE);
-            }
+            sTempHumi.PowerStatus_u8 = AppTemh_Check_Status_TempH();            
+            fevent_enable(sEventAppTempH, _EVENT_TEMH_LOG_TSVH);
         }
     }
                                       
@@ -251,15 +244,7 @@ static uint8_t _Cb_Temh_Log_TSVH (uint8_t event)
     UTIL_Printf_Dec(DBLEVEL_M, sVout.mVol_u32);
     UTIL_Printf_Str(DBLEVEL_M, " mV\r\n" );
  
-    //Record TSVH
-    
-    //Cat chuoi data GPS luu lai: gui di
-    if (sAppSimVar.sDataGPS.Length_u16 > MAX_BYTE_CUT_GPS)
-    {
-        AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_GPS_A, sAppSimVar.sDataGPS.Data_a8, sAppSimVar.sDataGPS.Length_u16);
-        sAppSimVar.sDataGPS.Length_u16 = 0;
-    }
-    
+    //Record TSVH   
     AppTemH_Log_Data_TSVH();    
         
 	return 1;
@@ -385,18 +370,56 @@ static uint8_t _Cb_Temh_Control_Led3(uint8_t event)
 
 
 
-
+uint32_t count_error=0;
+uint32_t count_send=0;
 
 
 static uint8_t _Cb_Test_RS485 (uint8_t event)
 {  
+    static uint8_t step = 0;
+    uint8_t aTMEP[8] = { 0x01, 0x06, 0x03, 0xE8, 0x00, 0x00, 0x09, 0xBA};
     
-    HAL_GPIO_WritePin(RS485_TXDE_GPIO_Port, RS485_TXDE_Pin, GPIO_PIN_SET);  
-    HAL_Delay(10);
-    
-    HAL_UART_Transmit(&UART_485, (uint8_t *)"Vo van chien\r\n", 14, 1000); 
-    //Dua DE ve Receive
-    HAL_GPIO_WritePin(RS485_TXDE_GPIO_Port, RS485_TXDE_Pin, GPIO_PIN_RESET);
+    switch (step)
+    {
+        case 0:
+            HAL_GPIO_WritePin(RS485_TXDE_GPIO_Port, RS485_TXDE_Pin, GPIO_PIN_SET);  
+            HAL_Delay(10);
+            
+            Reset_Buff(&sUart485);
+            sTempHumi.ModBusStatus_u8 = false;
+            
+            HAL_UART_Transmit(&UART_485, &aTMEP[0], 8, 1000); 
+            //Dua DE ve Receive
+            HAL_GPIO_WritePin(RS485_TXDE_GPIO_Port, RS485_TXDE_Pin, GPIO_PIN_RESET);
+            count_send++;
+            step++;
+            break;
+        case 1:
+            if (sTempHumi.ModBusStatus_u8 == true)
+            {
+                if (sUart485.Length_u16 == 8)
+                {
+                    UTIL_Printf_Str(DBLEVEL_M, "\r\n485 OK: "); 
+                    UTIL_Printf_Hex(DBLEVEL_M, sUart485.Data_a8, sUart485.Length_u16); 
+                    UTIL_Printf_Str(DBLEVEL_M, "\r\n"); 
+                } else
+                {
+                    UTIL_Printf_Str(DBLEVEL_M, "\r\n485 Fail: "); 
+                    UTIL_Printf_Hex(DBLEVEL_M, sUart485.Data_a8, sUart485.Length_u16); 
+                    UTIL_Printf_Str(DBLEVEL_M, "\r\n"); 
+                }
+                if(sUart485.Length_u16 < 8)
+                {
+                    count_error++;
+                }
+            }
+            
+            step = 0;
+            break;
+        default:
+            break;
+        
+    }
     
     fevent_enable(sEventAppTempH, event);
 
@@ -414,7 +437,8 @@ uint8_t AppTemH_Task(void)
 	{
 		if (sEventAppTempH[i].e_status == 1)
 		{
-            Result = true;
+            if ((i != _EVENT_CONTROL_LED1) && (i != _EVENT_CONTROL_LED2) && (i != _EVENT_CONTROL_LED3) )
+                Result = true;
 
 			if ((sEventAppTempH[i].e_systick == 0) ||
 					((HAL_GetTick() - sEventAppTempH[i].e_systick)  >=  sEventAppTempH[i].e_period))

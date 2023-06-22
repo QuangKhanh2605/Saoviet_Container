@@ -1330,6 +1330,18 @@
             </file>
         </group>
         <group>
+            <name>user_app_inverter</name>
+            <file>
+                <name>$PROJ_DIR$\..\user_app\user_app_inverter\user_app_inverter.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\user_app\user_app_inverter\user_app_inverter.h</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\user_app\user_app_inverter\user_sv_inverter.h</name>
+            </file>
+        </group>
+        <group>
             <name>user_app_mem</name>
             <file>
                 <name>$PROJ_DIR$\..\user_app\user_app_mem\user_app_mem.c</name>
@@ -1351,18 +1363,6 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\user_app\user_app_sim\user_mqtt.h</name>
-            </file>
-        </group>
-        <group>
-            <name>user_app_temp</name>
-            <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_temp_humi\user_app_temh.c</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_temp_humi\user_app_temh.h</name>
-            </file>
-            <file>
-                <name>$PROJ_DIR$\..\user_app\user_app_temp_humi\user_sv_temphumi.h</name>
             </file>
         </group>
         <group>

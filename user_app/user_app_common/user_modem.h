@@ -40,6 +40,8 @@ typedef enum
     _WM_GSM_LEVEL,
     _WM_GSM_LORA,
     _TEM_HUMI_GSM,
+    _WM_GSM_CONV,
+    _CONTROL_INVERTER,
     
 } Type_Mark_DCU;
 

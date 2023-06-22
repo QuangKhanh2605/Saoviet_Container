@@ -144,7 +144,7 @@ void        AppMem_Forward_Data_To_Sim (uint8_t TypeData, uint8_t *pData, uint16
 void        AppMem_PowerOff_ExFlash (void);
 void        AppMem_PowerOn_ExFlash (void);
 
-
+uint8_t     AppMem_Check_New_Record (void);
 
 
 

@@ -212,9 +212,10 @@ uint8_t  aSIM_STEP_INFOR_CSQ[3] =
 };
 
 
-uint8_t aSimStepBlockDisConnect[3] = 
+uint8_t aSimStepBlockDisConnect[4] = 
 {
     _SIM_TCP_OUT_DATAMODE,
+    _SIM_TCP_IP_SIM,
 	_SIM_TCP_CLOSE_1,
     _SIM_TCP_CLOSE_2,
 };
@@ -334,10 +335,10 @@ const sCommand_Sim_Struct aSimEC200UStep[] =
     {   _SIM_TCP_IN_DATAMODE,       _CbAT_TRANPARENT_MODE,      at_callback_failure,        NULL,		            NULL     	        },
 #endif   
     //Cmd TCP 
-    {   _SIM_TCP_IP_SIM,	        _CbAT_GET_IP_SIM,           at_callback_failure,        "OK",                   "AT+QISTATE=1,0\r"  },         
+    {   _SIM_TCP_IP_SIM,	        _CbAT_GET_IP_SIM,           at_callback_failure,        "OK",                   "AT+QISTATE?\r"  },         
 	{	_SIM_TCP_CLOSE_1,	 	    _CbAT_TCP_CLOSE_1,          at_callback_failure,        NULL,	                "AT+QICLOSE="  	},
-    {	_SIM_TCP_CLOSE_2,	 	    at_callback_success,        at_callback_failure,        "OK",	                "\r"  	},
-
+    {	_SIM_TCP_CLOSE_2,	 	    at_callback_success,        at_callback_failure,        "OK",	                "\r"  	}, 
+  
     {	_SIM_TCP_CONNECT_1,	        _CbAT_OPEN_TCP_1,           at_callback_failure,        NULL,                   "AT+QIOPEN=1,"     	},
 #ifdef USING_TRANSPARENT_MODE
     {	_SIM_TCP_CONNECT_2,	        _CbAT_OPEN_TCP_2,           at_callback_failure,        "CONNECT",              ",0,2\r"            },   // Tranparent; AT+QIOPEN=1,0,"TCP","220.180.239.212",8009,0,2
@@ -609,7 +610,6 @@ static uint8_t _CbAT_TCP_CLOSE_1(sData *uart_string)
     
     return 1;
 }
-
 
 
 
@@ -1292,9 +1292,6 @@ static uint8_t _Cb_GPS_POSITION_INF(sData *uart_string)
                     
         if (Result == true)
         {
-            //Push block clear data cu
-            sSimCommFuncCallBack->pSim_Common_Handler_AT ( _SIM_COMM_EVENT_GPS_OK );        
-                
             sSimCommon.sGPS.LengData_u8 = PosEnd - PosStart;
             
             if (sSimCommon.sGPS.LengData_u8 < MAX_LENGTH_GPS)
@@ -1308,6 +1305,9 @@ static uint8_t _Cb_GPS_POSITION_INF(sData *uart_string)
                 //Get OK
                 UTIL_Printf_Str (DBLEVEL_M, "u_ec200u: gps get data OK!\r\n" );
                 
+                //Push block clear data cu
+                sSimCommFuncCallBack->pSim_Common_Handler_AT ( _SIM_COMM_EVENT_GPS_OK );   
+            
                 return 1;
             } else
             {
@@ -1316,6 +1316,8 @@ static uint8_t _Cb_GPS_POSITION_INF(sData *uart_string)
             }
         }
     }
+    
+    sSimCommFuncCallBack->pSim_Common_Handler_AT ( _SIM_COMM_EVENT_GPS_ERROR ); 
     
     UTIL_Log_Str ( DBLEVEL_M, "u_ec200u: gps get data error!\r\n" );
     
@@ -1388,7 +1390,10 @@ uint8_t EC200U_Is_Step_Check_URC (uint8_t sim_step)
 uint8_t EC200U_Check_Step_Skip_Error (uint8_t step)
 {
     if ( step == _SIM_GPS_POSTION_INF )
-        sSimCommon.sGPS.Status_u8   = error;
+    {
+        sSimCommon.sGPS.Status_u8 = error;
+        sSimCommFuncCallBack->pSim_Common_Handler_AT ( _SIM_COMM_EVENT_GPS_ERROR ); 
+    }
     
     if ( ( step == _SIM_GPS_POSTION_INF) || (step == _SIM_GPS_TURN_ON) || (step == _SIM_GPS_DEL_CUR_DATA) )
         return true;

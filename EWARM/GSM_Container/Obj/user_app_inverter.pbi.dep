@@ -1,0 +1,84 @@
+user_app_inverter.pbi: \
+  D:\Project_STM32\Saoviet_Container\user_app\user_app_inverter\user_app_inverter.c \
+  D:\Project_STM32\Saoviet_Container\user_app\user_app_inverter/user_app_inverter.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util\user_util.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Core/Inc\stm32l1xx_hal_conf.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_rcc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_def.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Device/ST/STM32L1xx/Include\stm32l1xx.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Device/ST/STM32L1xx/Include/stm32l151xc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Include\core_cm3.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdint.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\ycheck.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\yvals.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Defaults.h \
+  C:\\Program\ Files\ (x86)\\IAR\ Systems\\Embedded\ Workbench\ 8.3\\arm\\inc\\c\\DLib_Config_Full.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Include/cmsis_version.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Include/cmsis_compiler.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Include\cmsis_iccarm.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\iccarm_builtin.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Include/mpu_armv7.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/CMSIS/Device/ST/STM32L1xx/Include/system_stm32l1xx.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stddef.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\ysizet.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_rcc_ex.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_gpio.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_gpio_ex.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_dma.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_cortex.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_adc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_adc_ex.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_flash.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ex.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_flash_ramfunc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_i2c.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_pwr.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_pwr_ex.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_rtc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_hal_rtc_ex.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_spi.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_uart.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Drivers/STM32L1xx_HAL_Driver/Inc\stm32l1xx_hal_exti.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_uart\user_uart.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Core/Inc\usart.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Core/Inc/main.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_eventdriven\event_driven.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util\user_adc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util/user_util.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Core/Inc\adc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_common\user_define.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_common/user_app_comm.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_sim\user_app_sim.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_sim\user_sim.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_queue\queue_p.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_sim/user_sim_common.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Core/Inc\main.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util\onchipflash.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_sim\user_ec200u\user_ec200u.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_sim\user_sim_common.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_sim/user_mqtt.h \
+  D:\Project_STM32\Saoviet_Container\user_app\user_app_inverter\user_app_inverter.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_mem\user_app_mem.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_mem\user_internal_mem\user_internal_mem.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_mem\user_mem_comm.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_mem\user_external_eeprom\user_external_eeprom.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_mem\user_external_eeprom\user_cat24\cat24mxx.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_mem\user_external_flash\user_external_flash.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\user_mem\user_external_flash\external_flash_S25FL216K\S25FL216K.h \
+  D:\Project_STM32\Saoviet_Container\EWARM/../Core/Inc\spi.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_common/user_modem.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_common/user_define.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_log\user_log.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util\user_lpm.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_app_common/user_modem_init.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_app\user_at_serial\user_at_serial.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util\user_time.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_timer\user_rtc.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_timer/user_timer.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdbool.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util\user_obis_sv.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_util\user_modbus_rtu.h \
+  D:\Project_STM32\Saoviet_Container\user_app\user_app_inverter/user_sv_inverter.h

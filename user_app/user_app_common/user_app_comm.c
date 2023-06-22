@@ -60,7 +60,7 @@ char aSaoVietCom[15][71] =
 };
 
 
-sData   sFirmVersion = {(uint8_t *) "SVTH_GSM_V1_1_0", 15};
+sData   sFirmVersion = {(uint8_t *) "SVTH_GSM_V1_1_2", 15};
 
 static UTIL_TIMER_Object_t TimerTx;
 
@@ -185,7 +185,7 @@ static uint8_t _Cb_Tx_Timer(uint8_t event)
 #endif
 
 #ifdef USING_APP_TEMH
-    fevent_active(sEventAppTempH, _EVENT_TEMH_ENTRY);
+    fevent_active(sEventAppIVT, _EVENT_ENTRY_IVT);
 #endif
  
     //Increase Count To Send Mess
@@ -194,8 +194,8 @@ static uint8_t _Cb_Tx_Timer(uint8_t event)
 	{
         sModem.CountSleepToSend_u8 = 0;
     #ifdef USING_APP_SIM
-        fevent_active(sEventAppSim, _EVENT_SIM_SEND_MESS);
         fevent_active(sEventAppSim, _EVENT_SIM_REQ_GPS);
+        AppSim_Start_Module_Sim();
         sModem.IsDutyCycle_u8  = true;
     #endif
 	}
@@ -251,7 +251,7 @@ void SysApp_Setting (void)
 #endif
     
 #ifdef USING_APP_TEMH
-    AppTemH_Init();
+    AppIVT_Init();
 #endif
     
     AppMem_Init();
@@ -273,10 +273,10 @@ void SysApp_Setting (void)
 /*
     Func: Init Queue trong main
 */
-
+uint8_t TaskStatus_u8 = 0;
 void Main_Task (void)
 {
-    uint8_t TaskStatus_u8 = 0;
+//    uint8_t TaskStatus_u8 = 0;
     
     SysApp_Init();
     SysApp_Setting();
@@ -300,7 +300,11 @@ void Main_Task (void)
 		TaskStatus_u8 = 0;
 
 		TaskStatus_u8 |= AppComm_Task();
-        TaskStatus_u8 |= AppMem_Task();
+        
+        if (( sSimCommon.PowerStatus_u8 == _POWER_CONN_MQTT) && (Check_Time_Out(sSimVar.LandMarkSendAT_u32, 800) == true) )
+            TaskStatus_u8 |= AppMem_Task();
+        else
+            TaskStatus_u8 |= AppMem_Task();
         
     #ifdef USING_APP_SIM
         TaskStatus_u8 |= AppSim_Task();
@@ -308,7 +312,7 @@ void Main_Task (void)
     #endif
       
     #ifdef USING_APP_TEMH
-        TaskStatus_u8 |= AppTemH_Task();
+        TaskStatus_u8 |= AppIVT_Task();
     #endif
             
     #ifdef USING_APP_WM
@@ -327,22 +331,22 @@ void Main_Task (void)
     #ifdef USING_APP_LORA
         TaskStatus_u8 |= AppLora_Process();
     #endif
-     
-//        if ((TaskStatus_u8 == 0) && (sModem.ModeSimPower_u8 == _POWER_MODE_SAVE) && (sModem.IRQPowerOutAgain_u8 == FALSE))
-//        {
-//        #ifdef USING_APP_SIM
-//            //Neu thuc hien xong tranfer qua module sim (hoac sim deep sleep | Poweroff) -> set che do ngu sau
-//            if (sSimCommon.PowerStatus_u8 == _POWER_POWER_OFF)
-//            {
-//                UTIL_LPM_SetStopMode((UTIL_LPM_State_t) LPM_FALSE);
-//            } else
-//                UTIL_LPM_SetStopMode((UTIL_LPM_State_t) LPM_TRUE);
-//        #else
-//            UTIL_LPM_SetStopMode((UTIL_LPM_State_t) LPM_FALSE);
-//        #endif
-//            //Func Lowpower
-//            UTIL_LPM_EnterLowPower();
-//        }
+
+        if ( (TaskStatus_u8 == 0) && (sModem.ModeSimPower_u8 == _POWER_MODE_SAVE) && (sModem.IRQPowerOutAgain_u8 == FALSE) )
+        {
+        #ifdef USING_APP_SIM
+            //Neu thuc hien xong tranfer qua module sim (hoac sim deep sleep | Poweroff) -> set che do ngu sau
+            if (sSimCommon.PowerStatus_u8 == _POWER_POWER_OFF)
+            {
+                UTIL_LPM_SetStopMode((UTIL_LPM_State_t) LPM_FALSE);
+            } else
+                UTIL_LPM_SetStopMode((UTIL_LPM_State_t) LPM_TRUE);
+        #else
+            UTIL_LPM_SetStopMode((UTIL_LPM_State_t) LPM_FALSE);
+        #endif
+            //Func Lowpower
+            UTIL_LPM_EnterLowPower();
+        }
 	}
 }
 
@@ -356,9 +360,9 @@ void AppComm_Init (void)
     //Init information in Memory
 	Init_Memory_Infor();
     //Loai DCU
-    sModem.TypeModem_u8 = _TEM_HUMI_GSM;   
+    sModem.TypeModem_u8 = _CONTROL_INVERTER;   
     //Set Con tro mode Power: Save_Mode. OnlineMode
-    sModem.ModeSimPower_u8 = _POWER_MODE_ONLINE;
+    sModem.ModeSimPower_u8 =  _POWER_MODE_ONLINE; // _POWER_MODE_ONLINE;
     //Func Pointer Lib Timer
     pModemProcessIRQTimer = AppComm_IRQ_Timer_CallBack;
     //Func Pointer Lib LPM
@@ -454,7 +458,9 @@ static uint32_t AppCom_Calcu_Period_To_RoudTime (uint32_t FreqWakeup)
 
 static void Cb_TX_Timer_Event(void *context)
 {
-	Modem_Log_And_Send_Emergency((uint8_t*) "=Timer TX Event callback=\r\n", 27);
+    UTIL_Printf_Str (DBLEVEL_M, "=Timer TX Event callback=\r\n" );
+    
+//    Modem_Log_And_Send_Emergency((uint8_t*) "=Timer TX Event callback=\r\n", 27);
 
     if (sExFlash.Status_u8 == ERROR)
     {

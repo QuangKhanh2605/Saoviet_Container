@@ -18,10 +18,12 @@
 #define CAT_SIZE_DATA_TSVH	            128        
 #define CAT_SIZE_DATA_EVENT	            64         
 #define CAT_SIZE_DATA_LOG	            64   
+#define CAT_SIZE_DATA_GPS	            256   
 
 #define	CAT_MAX_MESS_TSVH_SAVE			50
 #define	CAT_MAX_MESS_EVENT_SAVE			10
-#define CAT_MAX_MESS_LOG_SAVE           130  
+#define CAT_MAX_MESS_LOG_SAVE           130 
+#define CAT_MAX_MESS_GPS_SAVE           2  
 
 #define CAT_BYTE_EMPTY                  0xFF
 
@@ -39,9 +41,15 @@
 #define	CAT_ADDR_LOG_START   		    8000            //130 packet + 1 du
 #define	CAT_ADDR_LOG_STOP			    16384
 
+#define	CAT_ADDR_GPS_START   		    0            //130 packet + 1 du
+#define	CAT_ADDR_GPS_STOP			    768
 
+
+//Define Variable
+#define	EEPROM_MAX_RETRY_WRITE          10
 
 /*========== Var struct ===============*/
+
 typedef enum
 {
 	_EVENT_EX_EEPROM_WRITE_BUFF = 0,

@@ -90,6 +90,8 @@ const MARK_TYPE_DCU sMark_DCU_Type[] =
     { _WM_GSM_LEVEL,		           	{(uint8_t*)"DCU/WMSV/WML1/",14}},
     { _WM_GSM_LORA,		           	    {(uint8_t*)"DCU/WMSV/WMLG/",14}},
     { _TEM_HUMI_GSM,		           	{(uint8_t*)"DCU/THSV/THGS/",14}},
+    { _WM_GSM_CONV,		           	    {(uint8_t*)"DCU/WMSV/WMPI/",14}},
+    { _CONTROL_INVERTER,		        {(uint8_t*)"DCU/WMSV/WMCI/",14}},
 };
 
 struct_MQTT				sMQTT;
@@ -168,11 +170,11 @@ void mSend_Packet_MQTT(struct_MQTT *mqtt)
 }
 
 
-void mData_MQTT (uint8_t MessType)
+void mData_MQTT (uint8_t MessType, uint8_t Qos)
 {
     mSet_default_MQTT();        //dua con tro MQTT.str.data_u8 tro dau mang aDATA_MQTT
 
-    sMQTT.PulishQos = MY_QOS;
+    sMQTT.PulishQos = Qos;   // MY_QOS;
 	sMQTT.PulishRetained = 0;
 	sMQTT.PulishPacketId = 1;
 
@@ -267,7 +269,7 @@ uint8_t _mDATA_HANDSHAKE(int Kind_Send)
     *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16 - 1) = TempCrc;
 
     //Send MQTT
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -284,7 +286,7 @@ uint8_t _mDATA_TSVH_PACKET(int Kind_Send)
         *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
     }
     
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
     
     return 1;
 }
@@ -302,7 +304,7 @@ uint8_t _mDATA_TSVH_PACKET_OPERA (int Kind_Send)
         *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
     }
     
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
     
     return 1;
 }
@@ -315,11 +317,11 @@ uint8_t _mDATA_INTAN_TSVH(int Kind_Send)
     sMQTT.sPayload.Length_u16 = 0;
 
 #if defined(USING_APP_WM) || defined (USING_APP_EMET)
-    sMQTT.sPayload.Length_u16 = Modem_Packet_TSVH (sMQTT.sPayload.Data_a8);
+    sMQTT.sPayload.Length_u16 = AppWm_Packet_TSVH (sMQTT.sPayload.Data_a8);
 #endif
    
 #if defined(USING_APP_TEMH) 
-    sMQTT.sPayload.Length_u16 = AppTemH_Packet_TSVH (sMQTT.sPayload.Data_a8);
+    sMQTT.sPayload.Length_u16 = AppIVT_Packet_TSVH (sMQTT.sPayload.Data_a8);
 #endif
     
 #if defined(USING_APP_LORA)  
@@ -327,7 +329,7 @@ uint8_t _mDATA_INTAN_TSVH(int Kind_Send)
         *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sLoraVar.sIntanData.Data_a8 + i); 
 #endif
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -349,7 +351,7 @@ uint8_t _mSEND_SHUTTING_DOWN(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, SEND_SHUTTING_DOWN);
 	mPayload_Load_MesErr(&sPayLoadShutdown);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -361,7 +363,7 @@ uint8_t _mSEND_RECONNECT_SERVER(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, SEND_SHUTTING_DOWN);
 	mPayload_Load_MesErr(&sPayLoadReConn);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -373,7 +375,7 @@ uint8_t _mSEND_HARDRS_MCU(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, SEND_SHUTTING_DOWN);
 	mPayload_Load_MesErr(&sPayLoadReConn);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -393,7 +395,7 @@ uint8_t _mSEND_ALARM_EMERGENCY(int Kind_Send)
 
     Reset_Buff(&sModem.strAlarmEmer);
     
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
         
     return 1;
 }
@@ -405,7 +407,7 @@ uint8_t _mDATA_PING(int Kind_Send)
 {
 	_mInsert_Ping_Payload(&sMQTT.sPayload);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -434,7 +436,7 @@ uint8_t _mDATA_EVENT(int Kind_Send)
         *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
     }
     
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
     
     return 1;
 }
@@ -451,7 +453,7 @@ uint8_t _mDATA_GPS(int Kind_Send)
         *(sMQTT.sPayload.Data_a8 + sMQTT.sPayload.Length_u16++) = *(sAppSimVar.sDataFlashSim.Data_a8 + i);
     }
     
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -517,7 +519,7 @@ uint8_t _mSEND_SIM_ID(int Kind_Send)
 {
 	_mPayload_Sim_ID(&sMQTT.sPayload);  // Load DATA for Payload
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -564,7 +566,7 @@ uint8_t _mSEND_RESPOND_SERVER(int Kind_Send)
     for (i = 0; i < sModem.strATResp.Length_u16; i++)
       *(sMQTT.sPayload.Data_a8 +  sMQTT.sPayload.Length_u16++) = *(sModem.strATResp.Data_a8 + i);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -582,7 +584,7 @@ uint8_t _mSEND_RESPOND_FROM_RF(int Kind_Send)
     for (i = 0; i < sModem.strATResp.Length_u16; i++)
       *(sMQTT.sPayload.Data_a8 +  sMQTT.sPayload.Length_u16++) = *(sModem.strATResp.Data_a8 + i);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -602,7 +604,7 @@ uint8_t _mSEND_RESPOND_SERVER_ACK(int Kind_Send)
     for (i = 0; i < sModem.strATResp.Length_u16; i++)
       *(sMQTT.sPayload.Data_a8 +  sMQTT.sPayload.Length_u16++) = *(sModem.strATResp.Data_a8 + i);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -630,7 +632,7 @@ uint8_t _mSEND_SERVER_TIME_PENDING(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
 	mPayload_Load_MesErr(&sPayTimePending);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -642,7 +644,7 @@ uint8_t _mSEND_SERVER_TIME_OK(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT,MS_CORRECT,Kind_Send);
 	mPayload_Load_MesErr(&sPayTimeOK);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -655,7 +657,7 @@ uint8_t _mSEND_SERVER_TIME_FAIL(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_FAIL, Kind_Send);
 	mPayload_Load_MesErr(&sPayTimeFail);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -667,7 +669,7 @@ uint8_t _mSEND_SAVE_BOX_FAIL(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
 	mPayload_Load_MesErr(&sPaySaveBoxFail);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -679,7 +681,7 @@ uint8_t _mSEND_SAVE_BOK_OK(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
 	mPayload_Load_MesErr(&sPaySaveBoxOK);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, MY_QOS);
 
     return 1;
 }
@@ -694,7 +696,7 @@ uint8_t _mSEND_EMPTY_MESS(int Kind_Send)
 	mPayload_Update_Add(aPAYLOAD_MQTT, MS_CORRECT, Kind_Send);
 	mPayload_Load_MesErr(&sPayEmpFlashFail);
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -716,11 +718,11 @@ uint8_t _mSEND_UPDATE_FIRM_OK(int Kind_Send)
     if (sModem.IsOverFivePulse_u8 == 0)
     {
         mPayload_Load_MesErr(&strWaitPulse);
-        UTIL_Log(strWaitPulse.Data_a8, strWaitPulse.Length_u16);
+        UTIL_Log(DBLEVEL_M, strWaitPulse.Data_a8, strWaitPulse.Length_u16);
     }
 #endif
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -765,11 +767,11 @@ uint8_t _mSEND_UPDATE_FIRM_FAIL(int Kind_Send)
     if (sModem.IsOverFivePulse_u8 == 0)
     {
         mPayload_Load_MesErr(&strWaitPulse);
-        UTIL_Log(strWaitPulse.Data_a8, strWaitPulse.Length_u16);
+        UTIL_Log(DBLEVEL_M, strWaitPulse.Data_a8, strWaitPulse.Length_u16);
     }
 #endif
 
-    mData_MQTT(Kind_Send);
+    mData_MQTT(Kind_Send, 0);
 
     return 1;
 }
@@ -802,7 +804,11 @@ __weak void _rREQUEST_SETTING(sData *str_Receiv, int16_t Pos)
     uint8_t   TempLeng;
     uint8_t   ObisConfig = 0;
     uint8_t   TempU8 = 0, i = 0;
-
+    uint16_t  TempU16 = 0;
+    uint32_t  TempU32 = 0; 
+    
+    uint8_t     TempCrc = 0;   
+    
     //chay tu tren xuong duoi de check tat ca cac obis cau hinh
     while ((PosFix + 4) <= str_Receiv->Length_u16)   //vi byte cuoi la crc
     {
@@ -813,26 +819,26 @@ __weak void _rREQUEST_SETTING(sData *str_Receiv, int16_t Pos)
             case 0x01:  //Lenh set duty cycle: Ex: 0102000A09.
                 if (sModem.ModeSimPower_u8 == _POWER_MODE_ONLINE)
                 {
-                    TempU8 = 0;
+                    TempU16 = 0;
                     TempLeng = *(str_Receiv->Data_a8 + PosFix++);
                     for (i = 0; i < TempLeng; i++)
-                        TempU8 = (TempU8 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
+                        TempU16 = (TempU16 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
 
-                    sFreqInfor.FreqSendOnline_u32 = TempU8;
+                    sFreqInfor.FreqSendOnline_u32 = TempU16;
                     
                 } else
                 {
-                    TempU8 = 0;
+                    TempU16 = 0;
                     TempLeng = *(str_Receiv->Data_a8 + PosFix++);
                     for (i = 0; i < TempLeng; i++)
-                        TempU8 = (TempU8 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
+                        TempU16 = (TempU16 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
 
-                    sFreqInfor.FreqWakeup_u32 = TempU8;
+                    sFreqInfor.FreqWakeup_u32 = TempU16;
                 }
                 
                 //Luu lai
                 Save_Freq_Send_Data ();
-                DCU_Respond (_AT_REQUEST_SERVER, (uint8_t *)"\r\nOK", 2, 1);
+                DCU_Respond (_AT_REQUEST_SERVER, (uint8_t *)"\r\nOK", 4, 1);
                 AppComm_Set_Next_TxTimer();
                 break;
             case 0x02:   //Lenh Reset so xung ve 0
@@ -843,12 +849,14 @@ __weak void _rREQUEST_SETTING(sData *str_Receiv, int16_t Pos)
 
                 DCU_Respond (_AT_REQUEST_SERVER, (uint8_t *)"\r\nRESET SO NUOC OK!", 2, 1);
                 break;
+                
             case 0x03:  //set ve che do luu kho
                 PosFix += 2;
 
                 DCU_Respond (_AT_REQUEST_SERVER, (uint8_t *)"\r\nOK", 12, 1);
                 sModem.IsSaveBoxMode_u8 = _AT_REQUEST_SERVER;
                 break;
+                
             case 0x06:  //Set so lan thuc day. Cho dong bo voi Nuoc hoa binh cua tiep de thong nhat
                 TempLeng = *(str_Receiv->Data_a8 + PosFix++);   //length
                 TempU8 = *(str_Receiv->Data_a8 + PosFix++);
@@ -862,6 +870,134 @@ __weak void _rREQUEST_SETTING(sData *str_Receiv, int16_t Pos)
                 } else
                     DCU_Respond(_AT_REQUEST_SERVER, (uint8_t *)"FAIL", 4, 0);
                 break;
+                
+            case 0x28:
+                TempU16 = 0;
+                TempLeng = *(str_Receiv->Data_a8 + PosFix++);
+                for (i = 0; i < TempLeng; i++)
+                    TempU16 = (TempU16 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
+
+                sFre_IVT_Receive.Pre_IVT = TempU16;
+                sFre_IVT_Receive.Status_Receive_u8 = 1;
+                sFre_IVT_Receive.Scale_IVT = *(str_Receiv->Data_a8 + PosFix++);
+                //Luu lai
+//                Save_Freq_Send_Data ();
+                break;
+                
+            case OBIS_ENVI_CONFIG_IVT:
+                TempU16 = 0;
+                TempLeng = *(str_Receiv->Data_a8 + PosFix++);
+                for (i = 0; i < TempLeng; i++)
+                TempU16 = (TempU16 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
+                config_IVT_u8 = TempU16;
+                break;
+                
+            case OBIS_ENVI_RUN_STOP_IVT:
+                TempU16 = 0;
+                TempLeng = *(str_Receiv->Data_a8 + PosFix++);
+                for (i = 0; i < TempLeng; i++)
+                TempU16 = (TempU16 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
+                run_stop_485_IVT = TempU16;
+                UnLock_run_stop_485_IVT = run_stop_485_IVT;
+                break;
+                
+            case OBIS_ENVI_ADDR_READ_IVT:
+                TempU16 = 0;
+                TempLeng = *(str_Receiv->Data_a8 + PosFix++);
+                if(TempLeng == 0x06)
+                {
+                    UTIL_MEM_set(sRead_485_IVT.aData , 0x00, TempLeng + 2);
+                    sRead_485_IVT.Status_Receive_u8 = 1;
+                    for (i = 0; i < TempLeng; i++)
+                    {
+                        sRead_485_IVT.aData[i] = *(str_Receiv->Data_a8 + PosFix++);
+                    }
+                }
+                break;
+                
+            case OBIS_ENVI_ADDR_CONFIG_IVT:
+                TempU16 = 0;
+                TempLeng = *(str_Receiv->Data_a8 + PosFix++);
+                if(TempLeng == 0x06)
+                {
+                    UTIL_MEM_set(sConfig_485_IVT.aData , 0x00, TempLeng);
+                    sConfig_485_IVT.Status_Receive_u8 = 1;
+                    for (i = 0; i < TempLeng; i++)
+                    {
+                        sConfig_485_IVT.aData[i] = *(str_Receiv->Data_a8 + PosFix++);
+                    }
+                }
+                break;
+                
+            case OBIS_ENVI_ADDR_RUN_IVT:
+                TempU16 = 0;
+                TempLeng = *(str_Receiv->Data_a8 + PosFix++);
+                if(TempLeng == 0x06)
+                {
+                    UTIL_MEM_set(sRun_485_IVT.aData, 0x00, TempLeng);
+                    sRun_485_IVT.Status_Receive_u8 = 1;
+                    for (i = 0; i < TempLeng; i++)
+                    {
+                        sRun_485_IVT.aData[i] = *(str_Receiv->Data_a8 + PosFix++);
+                    }
+                }
+                break;
+          
+            case OBIS_ENVI_ID_SERVER:
+                TempU32 = 0;
+                TempLeng = *(str_Receiv->Data_a8 + PosFix++);
+                for (i = 0; i < TempLeng; i++)
+                TempU32 = (TempU32 << 8 ) | *(str_Receiv->Data_a8 + PosFix++);
+
+                ID_server_u32 = TempU32;
+//                Scale = *(str_Receiv->Data_a8 + PosFix++);
+
+                UTIL_MEM_set (aRESPONDSE_AT, 0, sizeof ( aRESPONDSE_AT ));
+                sModem.strATResp.Length_u16 = 0;
+                
+                //Dong goi phan hoi
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = OBIS_TIME_DEVICE;   // sTime
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = 0x06;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sRTC.year;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sRTC.month;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sRTC.date;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sRTC.hour;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sRTC.min;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sRTC.sec;
+                
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = OBIS_EMET_FREQ; 
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = 0x02;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = (sFre_IVT_Receive.Pre_IVT >> 8) & 0xFF;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sFre_IVT_Receive.Pre_IVT & 0xFF;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = sFre_IVT_Receive.Scale_IVT;
+                
+                
+                    //----------trang thai ket noi --------------------
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = OBIS_ENVI_CONNECT_STATUS; 
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = 0x01;
+                //aRESPONDSE_AT[sModem.strATResp.Length_u16++] = (connect_KDE >> 8) & 0xFF;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = connect_IVT_u8 & 0xFF;
+                //aRESPONDSE_AT[sModem.strATResp.Length_u16++] = 0x00;
+                
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = OBIS_ENVI_ID_SERVER; 
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = 0x04;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = (ID_server_u32 >> 24) & 0xFF;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = (ID_server_u32 >> 16) & 0xFF;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = (ID_server_u32 >> 8) & 0xFF;
+                aRESPONDSE_AT[sModem.strATResp.Length_u16++] = ID_server_u32 & 0xFF;
+                
+                // caculator crc
+                sModem.strATResp.Length_u16++;
+                for (i = 0; i < (sModem.strATResp.Length_u16 - 1); i++)
+                    TempCrc ^= aRESPONDSE_AT[i];
+
+                aRESPONDSE_AT[sModem.strATResp.Length_u16-1] = TempCrc;
+                
+            #ifdef USING_APP_SIM  
+                sMQTT.aMARK_MESS_PENDING[SEND_RESPOND_SERVER] = TRUE;
+            #endif
+                break;
+              
             default:
                 return;
         }

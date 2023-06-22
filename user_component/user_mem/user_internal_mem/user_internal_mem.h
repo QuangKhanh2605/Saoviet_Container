@@ -117,6 +117,11 @@
     #define ADDR_CT_SETTING             0x0803F400        
     #define ADDR_TIME_SETTING           0x0803F500        
     #define ADDR_RELAY_SETTING          0x0803F600     
+    
+    //Register Inverter 
+    #define ADDR_READ_INVERTER          0x0803F700
+    #define ADDR_CONFIG_INVERTER        0x0803F800
+    #define ADDR_RUN_STOP_INVERTER      0x0803F900
 
     /* ============= Add Modem config ======== */
     #define	ADDR_SERVER_INFOR			0x0803FA00

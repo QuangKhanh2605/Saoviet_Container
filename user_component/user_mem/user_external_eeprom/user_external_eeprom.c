@@ -13,8 +13,8 @@ static uint8_t _Cb_Ex_EEPROM_Check_Queue (uint8_t event);
 /*======== struct ===============*/
 sEvent_struct sEventExEEPROM[] =
 {
-	{ _EVENT_EX_EEPROM_WRITE_BUFF, 	    0, 0, 500,  			_Cb_Ex_EEPROM_Write_Buff  },
-	{ _EVENT_EX_EEPROM_READ_BUFF, 	    0, 0, 500,  			_Cb_Ex_EEPROM_Read_Buff   },
+	{ _EVENT_EX_EEPROM_WRITE_BUFF, 	    0, 0, 200,  			_Cb_Ex_EEPROM_Write_Buff  },
+	{ _EVENT_EX_EEPROM_READ_BUFF, 	    0, 0, 200,  			_Cb_Ex_EEPROM_Read_Buff   },
     { _EVENT_EX_EEPROM_CHECK_QUEUE, 	0, 0, 10,               _Cb_Ex_EEPROM_Check_Queue },
 };
 
@@ -42,14 +42,26 @@ static uint8_t _Cb_Ex_EEPROM_Write_Buff (uint8_t event)
     uint16_t LenWrite = sExEEPROM.sHWrite.Length_u16;
     uint8_t  NumWrite = 0;
     uint32_t PosWrite = 0;
+    static uint8_t CountRetry = 0;
     
     while (LenWrite > I2C_CAT24Mxx_MAX_BUFF)
     {
         PosWrite = NumWrite * I2C_CAT24Mxx_MAX_BUFF;
-        if (CAT24Mxx_Write_Array (sExEEPROM.sHWrite.Addr_u32 + PosWrite, sExEEPROM.sHWrite.aData, I2C_CAT24Mxx_MAX_BUFF) == 0) 
+        if (CAT24Mxx_Write_Array (sExEEPROM.sHWrite.Addr_u32 + PosWrite, &sExEEPROM.sHWrite.aData[PosWrite], I2C_CAT24Mxx_MAX_BUFF) == 0) 
         {
             //Set EEPROM Loi and check again
-            UTIL_Log_Str( DBLEVEL_M, "u_ex_eeprom: write eeprom fail!\r\n" ); 
+            sExEEPROM.sHWrite.Pending_u8 = false;
+            UTIL_Printf_Str( DBLEVEL_M, "u_ex_eeprom: write eeprom fail!\r\n" ); 
+            
+            CountRetry++;
+            if (CountRetry >= EEPROM_MAX_RETRY_WRITE)
+            {
+                CountRetry = 0;
+                qQueue_Receive(&qExEEPROMWrite, NULL, 1);   
+                sExEEPROM.pMem_Forward_Data_To_Sim(sExEEPROM.sHWrite.TypeData_u8, &sExEEPROM.sHWrite.aData[0], 
+                                                   sExEEPROM.sHWrite.Length_u16);
+            }
+            
             return 0;
         }
         
@@ -60,15 +72,26 @@ static uint8_t _Cb_Ex_EEPROM_Write_Buff (uint8_t event)
     //Luu vao Flash
     if (LenWrite != 0)
     {
-        if (CAT24Mxx_Write_Array (sExEEPROM.sHWrite.Addr_u32 + PosWrite,  sExEEPROM.sHWrite.aData, LenWrite) == 0)  
+        if (CAT24Mxx_Write_Array (sExEEPROM.sHWrite.Addr_u32 + PosWrite,  &sExEEPROM.sHWrite.aData[PosWrite], LenWrite) == 0)  
         {
             //Set EEPROM Loi and check again
-            UTIL_Log_Str( DBLEVEL_M, "u_ex_eeprom: write eeprom fail!\r\n" ); 
+            sExEEPROM.sHWrite.Pending_u8 = false;
+            UTIL_Printf_Str( DBLEVEL_M, "u_ex_eeprom: write eeprom fail!\r\n" ); 
+            //Bo qua item neu qua retry
+            CountRetry++;
+            if (CountRetry >= EEPROM_MAX_RETRY_WRITE)
+            {
+                CountRetry = 0;
+                qQueue_Receive(&qExEEPROMWrite, NULL, 1);
+                sExEEPROM.pMem_Forward_Data_To_Sim(sExEEPROM.sHWrite.TypeData_u8, &sExEEPROM.sHWrite.aData[0], 
+                                                   sExEEPROM.sHWrite.Length_u16);
+            }
             
             return 0;
         }
     }
     
+    CountRetry = 0;
     //Write OK: tang index save
     if (sExEEPROM.pMem_Write_OK != NULL)
         sExEEPROM.pMem_Write_OK(sExEEPROM.sHWrite.TypeData_u8);
@@ -81,14 +104,25 @@ static uint8_t _Cb_Ex_EEPROM_Write_Buff (uint8_t event)
 
 static uint8_t _Cb_Ex_EEPROM_Read_Buff (uint8_t event)
 {
+    static uint8_t RetryRead = 0;
     //Doc Packet from Index
     if (CAT24Mxx_Read_Array(sExEEPROM.sHRead.Addr_u32, sExEEPROM.sHRead.aData.Data_a8, sExEEPROM.sHRead.aData.Length_u16) != 1)
     {
         //Set EEPROM Loi and check again
-        UTIL_Log_Str( DBLEVEL_M, "u_ex_eeprom: read eeprom fail!\r\n" );  
+        sExEEPROM.sHRead.Pending_u8 = false;
+        UTIL_Printf_Str( DBLEVEL_M, "u_ex_eeprom: read eeprom fail!\r\n" );  
+        
+        RetryRead++;
+        if (RetryRead >= EEPROM_MAX_RETRY_WRITE)
+        {
+            RetryRead = 0;
+            qQueue_Receive(&qExEEPROMRead, NULL, 1);  
+        }
         
         return 0;
     }
+    
+    RetryRead = 0;
     
     if (sExEEPROM.pMem_Read_OK != NULL)
         sExEEPROM.pMem_Read_OK(sExEEPROM.sHRead.TypeData_u8, sExEEPROM.sHRead.Addr_u32, sExEEPROM.sHRead.TypeRq_u8);
@@ -185,8 +219,9 @@ static uint8_t _Cb_Ex_EEPROM_Check_Queue (uint8_t event)
             }
         }
     }
-    
-    fevent_enable( sEventExEEPROM, event);
+            
+    if ( (qGet_Number_Items (&qExEEPROMWrite) != 0) || (qGet_Number_Items (&qExEEPROMRead) != 0) )
+        fevent_enable( sEventExEEPROM, event);
     
     return 1;
 }

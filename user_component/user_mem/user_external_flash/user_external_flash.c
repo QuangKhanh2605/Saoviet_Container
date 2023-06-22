@@ -304,7 +304,8 @@ static uint8_t _Cb_Event_Flash_Check_Queue(uint8_t event)
         }
     }
     
-    fevent_enable( sEventExFlash, event);
+    if ( (qGet_Number_Items (&qFlashWrite) != 0) || (qGet_Number_Items (&qFlashRead) != 0) )
+        fevent_enable( sEventExFlash, event);
     
 	return 1;
 }
@@ -458,7 +459,7 @@ static uint8_t _Cb_Write_Data_Success(void)
     for (i = 0; i < sExFlash.sHWrite.Length_u16; i++)
         S25FL_Send_Byte(sExFlash.sHWrite.aData[i]);
 
-    UTIL_Printf_Hex ( DBLEVEL_M, (uint8_t *) sExFlash.sHWrite.aData,  sExFlash.sHWrite.Length_u16);
+    UTIL_Printf_Hex ( DBLEVEL_H, (uint8_t *) sExFlash.sHWrite.aData,  sExFlash.sHWrite.Length_u16);
     UTIL_Printf_Str( DBLEVEL_M, "\r\n" );
     
 	return 1;

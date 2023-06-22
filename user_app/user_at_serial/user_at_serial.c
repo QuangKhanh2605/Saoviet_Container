@@ -1471,7 +1471,7 @@ void _fSET_LIST_ID_SLAVE (sData *str_Receiv, uint16_t Pos)
             count += 2;
         }
         
-        AppTemH_Save_Slave_ID();
+        AppIVT_Save_Slave_ID();
         
         DCU_Respond(PortConfig, (uint8_t *)"OK", 2, 0);
     } else

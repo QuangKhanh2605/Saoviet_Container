@@ -73,7 +73,8 @@ typedef enum
     _SIM_TCP_NETOPEN,
     _SIM_TCP_NETCLOSE,
     
-	_SIM_TCP_CLOSE,
+    _SIM_TCP_CLOSE_1,
+    _SIM_TCP_CLOSE_2,
 	_SIM_TCP_CONNECT_1,
     _SIM_TCP_CONNECT_2,
     
@@ -152,16 +153,16 @@ extern const sCommand_Sim_Struct aSimUrc[];
 extern uint8_t aSimStepBlockInit[15];
 extern uint8_t aSimStepBlockNework[10];
 #ifdef USING_TRANSPARENT_MODE
-    extern uint8_t aSimStepBlockConnect[12];
+    extern uint8_t aSimStepBlockConnect[13];
     extern uint8_t aSIM_STEP_PUBLISH_FB[2];
     extern uint8_t aSIM_STEP_PUBLISH[2];
 #else
-    extern uint8_t aSimStepBlockConnect[16];
+    extern uint8_t aSimStepBlockConnect[17];
     extern uint8_t aSIM_STEP_PUBLISH_FB[4];
     extern uint8_t aSIM_STEP_PUBLISH[4];
 #endif
 extern uint8_t aSIM_STEP_INFOR_CSQ[3];
-extern uint8_t aSimStepBlockDisConnect[3];
+extern uint8_t aSimStepBlockDisConnect[4];
 extern uint8_t aSimStepBlockGetClock[3];
 
 extern uint8_t aSimStepBlockHttpInit[19];

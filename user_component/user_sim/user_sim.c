@@ -183,6 +183,7 @@ static uint8_t fevent_sim_at_send_ok_handler(uint8_t event)
 {
 	uint8_t StepNow = 0;
     sCommand_Sim_Struct *sATCmd = NULL;
+    sCommand_Sim_Struct *sATCmdNext = NULL;
     uint32_t TimeDelay2AT = 0;
     
 	UTIL_TIMER_Stop(&TimerSendTimeout);
@@ -206,17 +207,18 @@ static uint8_t fevent_sim_at_send_ok_handler(uint8_t event)
         //Next step in queue
 		StepNow = Sim_Get_Step_From_Queue(1);
         //Get Struct AT Cmd
-        sATCmd = SIM_GET_AT_CMD(StepNow);  
+        sATCmdNext = SIM_GET_AT_CMD(StepNow);  
         if (TimeDelay2AT != 0)
         {
             UTIL_TIMER_SetPeriod(&TimerNextSendAT, TimeDelay2AT);
         } else
         {
-            //Neu nhung lenh tiep theo nao k co gui di: active ngay send at
-            if ( sATCmd->at_string  != NULL)
-                fevent_enable(sEventSim, _EVENT_SIM_AT_SEND);
+            //Neu nhung lenh tiep theo nao k co gui di: active ngay send at | Lenh truoc k co resp
+            if ( ( sATCmdNext->at_string  == NULL) || (sATCmd->at_response == NULL) )
+                fevent_active(sEventSim, _EVENT_SIM_AT_SEND); 
             else
-                fevent_active(sEventSim, _EVENT_SIM_AT_SEND);
+                fevent_enable(sEventSim, _EVENT_SIM_AT_SEND);
+            
             return 1;
         }
 	} else
@@ -422,10 +424,11 @@ static uint8_t fevent_sim_power_off_handler(uint8_t event)
     //clear event sim
     for (i = 0; i < _EVENT_SIM_END; i++)
         sEventSim[i].e_status = 0;
-    //Power off bang cach ngat nguon dien
-    SIM_PW_OFF1;  
+    
     //Set Status FinishTransPacket
     sSimCommon.PowerStatus_u8 = _POWER_POWER_OFF;
+    //Power off bang cach ngat nguon dien
+    SIM_PW_OFF1;  
     //Check Reset MCU
 	if (sSimVar.CountHardReset_u8 >= MAX_HARD_RESET)
     {
@@ -653,7 +656,8 @@ static void Sim_Process_URC_Callback (uint8_t Type)
             //Push lenh dong ket noi va Khoi dong lai
             UTIL_Log_Str (DBLEVEL_M, "=URC TCP CLOSE=\r\n" );
 
-            if (*sSimVar.ModePower_u8 == _POWER_MODE_ONLINE)
+            //Trong trương hợp ngat nguon: power off dot ngot: -> k cho no la tcp close
+            if (sSimCommon.PowerStatus_u8 != _POWER_POWER_OFF)
             {
                 fevent_active(sEventSim, _EVENT_SIM_AT_SEND_TIMEOUT);  
                 sSimVar.NumRetry_u8 = SIM_CMD_RETRY;
@@ -674,7 +678,8 @@ static void Sim_Process_URC_Callback (uint8_t Type)
             UTIL_Printf_Str ( DBLEVEL_M, "=URC ERROR=\r\n" );
             
             StepHandle = Sim_Get_Step_From_Queue(0);
-            if (EC200U_Check_Step_Skip_Error(StepHandle) == true)
+            
+            if (SIM_IS_STEP_SKIP_ERROR(StepHandle) == true)
                 fevent_active(sEventSim, _EVENT_SIM_AT_SEND_OK );
             else
                 fevent_active(sEventSim, _EVENT_SIM_AT_SEND_TIMEOUT);
@@ -704,6 +709,7 @@ static uint8_t Sim_Process_AT_CallBack (uint8_t Type)
         case _SIM_COMM_EVENT_SIM_CARD:
         case _SIM_COMM_EVENT_GET_STIME: 
         case _SIM_COMM_EVENT_GPS_OK:
+        case _SIM_COMM_EVENT_GPS_ERROR:
         case _SIM_COMM_EVENT_TCP_SEND_1:
         case _SIM_COMM_EVENT_TCP_SEND_2:
         case _SIM_COMM_EVENT_CONN_MQTT_1:
@@ -759,7 +765,7 @@ static void Sim_Check_Change_Server (void)
 static void Sim_Process_AT_Failure (void)
 {
     MX_USART2_UART_Init();
-    __HAL_UART_ENABLE_IT(&uart_sim, UART_IT_RXNE);
+    Init_Uart_Sim_Rx_IT();
     //Tang soft Reset
 	sSimVar.CountSoftReset_u8++;
     sSimVar.ConnSerStatus_u8 = FALSE;
@@ -767,6 +773,8 @@ static void Sim_Process_AT_Failure (void)
 	//Neu Soft Reset > 2
 	if (sSimVar.CountSoftReset_u8 < MAX_SOFT_RESET)
 	{
+        sSimCommon.PowerStatus_u8 = _POWER_INIT;
+        
 		switch (sSimCommon.GroupStepID_u8)
 		{
 			case _GR_PREE_INIT:
@@ -848,7 +856,8 @@ uint8_t SIM_POWER_ON(void)
 		case 0:      
 			UTIL_Log_Str(DBLEVEL_M, "\r\n=POWER ON SIM=\r\n" );
             MX_USART2_UART_Init();
-            __HAL_UART_ENABLE_IT(&uart_sim, UART_IT_RXNE);
+            Init_Uart_Sim_Rx_IT();
+            
             SIM_PW_OFF1;
             
             UTIL_TIMER_SetPeriod(&TimerControlBC66, ((sSimVar.CountHardReset_u8 % 10) * 1000) + 3000);
@@ -1260,3 +1269,9 @@ void Sim_Clear_Queue_Step (void)
     sSimVar.IsRunningATcmd_u8 = false;
     qQueue_Clear(&qSimStep);
 }
+
+
+
+
+
+

@@ -24,7 +24,7 @@ sEvent_struct sEventAppMem[] =
     { _EVENT_MEM_ERASE,  	            0, 0, 0,        _Cb_mem_Erase },
     { _EVENT_MEM_INIT_POS_REC,  		0, 0, 5,        _Cb_mem_Init_Pos_Rec }, 
     { _EVENT_MEM_CHECK_NEW_REC,  		1, 0, 1000,     _Cb_mem_Check_New_Rec },   
-    { _EVENT_MEM_CHECK_RQ_AT,  		    0, 0, 5000,     _Cb_mem_Check_Request_At },
+    { _EVENT_MEM_CHECK_RQ_AT,  		    0, 0, 2000,     _Cb_mem_Check_Request_At },
 };    
 
 sAppMemVariable       sAppMem;
@@ -297,6 +297,9 @@ static uint8_t _Cb_mem_Erase (uint8_t event)
     {
         UTIL_Printf_Str( DBLEVEL_M, "u_app_mem: erase eeprom ok. reset mcu!\r\n" );
         
+        if (sExEEPROM.pMem_Erase_Chip_OK != NULL)
+            sExEEPROM.pMem_Erase_Chip_OK();
+        
         Reset_Chip();
     }
 #endif
@@ -316,7 +319,8 @@ uint8_t AppMem_Task(void)
 	{
 		if (sEventAppMem[i].e_status == 1)
 		{
-            Result = true;
+            if (i != _EVENT_MEM_CHECK_NEW_REC)
+                Result = true;
 
 			if ((sEventAppMem[i].e_systick == 0) ||
 					((HAL_GetTick() - sEventAppMem[i].e_systick)  >=  sEventAppMem[i].e_period))
@@ -362,6 +366,9 @@ void AppMem_Init(void)
     sExEEPROM.pMem_Write_OK = AppMem_Cb_Write_OK;
     sExEEPROM.pMem_Read_OK = AppMem_Cb_Read_OK;
     sExEEPROM.pMem_Get_Addr_Fr_Type = AppMem_Cb_Get_Addr_From_TypeData;
+    
+    sExEEPROM.pMem_Erase_Chip_OK = AppMem_Cb_Erase_Chip_OK;
+    sExEEPROM.pMem_Forward_Data_To_Sim = AppMem_Forward_Data_To_Sim;
 #endif
 
 #ifdef EX_MEM_FLASH
@@ -406,8 +413,6 @@ void AppMem_Cb_Write_OK (uint8_t TypeData)
             UTIL_Printf_Str( DBLEVEL_M, "u_app_mem: increase addr tsvh b\r\n");
             //Increase AddB_u32 TSVH: If using sim....
             AppMem_Inc_Index_Send_1(&sRecTSVH, 1);
-            
-            sAppMem.PendingNewMess_u8 = false;  
             //eable Event check new Mess: to period 5s send next
             fevent_enable( sEventAppMem, _EVENT_MEM_CHECK_NEW_REC);
             break;
@@ -423,8 +428,6 @@ void AppMem_Cb_Write_OK (uint8_t TypeData)
             UTIL_Printf_Str( DBLEVEL_M, "u_app_mem: increase addr event b\r\n");
             //Increase AddB_u32 Event: If using sim....
             AppMem_Inc_Index_Send_1(&sRecEvent, 1);
-            
-            sAppMem.PendingNewMess_u8 = false;  
             //eable Event check new Mess: to period 5s send next
             fevent_enable( sEventAppMem, _EVENT_MEM_CHECK_NEW_REC);
             break;
@@ -443,8 +446,6 @@ void AppMem_Cb_Write_OK (uint8_t TypeData)
             UTIL_Printf_Str( DBLEVEL_M, "u_app_mem: increase addr gps b\r\n");
             //Increase AddB_u32 Event: If using sim....
             AppMem_Inc_Index_Send_1(&sRecGPS, 1);
-            
-            sAppMem.PendingNewMess_u8 = false;  
             //eable Event check new Mess: to period 5s send next
             fevent_enable( sEventAppMem, _EVENT_MEM_CHECK_NEW_REC);
             break;
@@ -718,9 +719,16 @@ void AppMem_Cb_Erase_Chip_OK(void)
 {
     //Luu chi so ve 0;
     mSave_Index_Record(sRecTSVH.AddIndexSend_u32, 0);
+    mSave_Index_Record(sRecTSVH.AddIndexSave_u32, 0);
+    
     mSave_Index_Record(sRecEvent.AddIndexSend_u32, 0);
+    mSave_Index_Record(sRecEvent.AddIndexSave_u32, 0);
+    
     mSave_Index_Record(sRecLog.AddIndexSend_u32, 0);
+    mSave_Index_Record(sRecLog.AddIndexSave_u32, 0);
+    
     mSave_Index_Record(sRecGPS.AddIndexSend_u32, 0);
+    mSave_Index_Record(sRecGPS.AddIndexSave_u32, 0);
     
     //Reset MCU
     Reset_Chip();
@@ -958,6 +966,8 @@ uint8_t AppMem_Inc_Index_Save (sRecordMemoryManager *sRec)
 
 uint8_t AppMem_Inc_Index_Send_1 (sRecordMemoryManager *sRec, uint8_t Num)
 {       
+    sAppMem.PendingNewMess_u8 = false; 
+    
     if (sRec->IndexSend_u16 != sRec->IndexSave_u16)
     {
         sRec->IndexSend_u16 = (sRec->IndexSend_u16 + Num) % sRec->MaxRecord_u16;
@@ -980,6 +990,8 @@ uint8_t AppMem_Inc_Index_Send_1 (sRecordMemoryManager *sRec, uint8_t Num)
 uint8_t AppMem_Inc_Index_Send_2 (sRecordMemoryManager *sRec, uint8_t Num)
 {       
     uint8_t Result = true;
+    
+    sAppMem.PendingNewMess_u8 = false; 
     
     if (sRec->IndexSend_u16 != sRec->IndexSave_u16)
     {
@@ -1055,6 +1067,29 @@ void AppMem_PowerOn_ExFlash (void)
     FLASH_POWER_ON;
     MX_SPI2_Init();
 }
+
+
+
+
+/*
+    Func: Kiem tra xem con record can gui di k
+*/
+
+uint8_t AppMem_Check_New_Record (void)
+{
+    if ( ( sRecTSVH.IndexSend_u16 != sRecTSVH.IndexSave_u16 ) ||
+        ( sRecEvent.IndexSend_u16 != sRecEvent.IndexSave_u16 ) )
+        return true;
+    
+    return false;
+}
+
+
+
+
+
+
+
 
 
 

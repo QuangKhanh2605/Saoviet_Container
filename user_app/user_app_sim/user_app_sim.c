@@ -5,6 +5,7 @@
 
 #include "user_string.h"
 #include "user_modem.h"
+#include "math.h"
 
 
 /*================ Var struct =================*/  
@@ -12,8 +13,8 @@ sEvent_struct sEventAppSim[] =
 {
     { _EVENT_SIM_SEND_MESS,  		0, 0, 2000,     _Cb_Event_Sim_Send_Mess },  
     { _EVENT_SIM_SEND_PING,  		0, 0, 30000,    _Cb_Event_Sim_Send_Ping },
-    { _EVENT_SIM_REQ_GPS,  		    1, 0, 5000,     _Cb_Event_Sim_Req_GPS },
-    { _EVENT_SIM_GET_GPS,  		    1, 0, 100,      _Cb_Event_Sim_Get_GPS },
+    { _EVENT_SIM_REQ_GPS,  		    1, 0, 5000,     _Cb_Event_Sim_Req_GPS },  
+    { _EVENT_SIM_GET_GPS,  		    1, 0, 100,      _Cb_Event_Sim_Get_GPS },   
 };
 
   
@@ -75,97 +76,125 @@ uint8_t _Cb_Event_Sim_Send_Ping (uint8_t event)
 */
 uint8_t _Cb_Event_Sim_Req_GPS (uint8_t event)
 {
-    /*
-        - Qua Init Module sim
-        - Neu trong queue con nhieu step (Full) -> bo qua
-    */
-    
-    if (sSimCommon.GroupStepID_u8 > _GR_SETTING)
-    {
-        if (qGet_Number_Items(&qSimStep) < (SIM_MAX_ITEM_QUEUE - 5))
-        {
-            sAppSimVar.IsGetGPS_u8 = false;
-            //Default struct value GPS
-            Sim_Defaul_Struct_GPS();  
-            //Push lenh lay toa do
-            fPushBlockSimStepToQueue(aSimStepBlockLocation, sizeof(aSimStepBlockLocation)); 
-        }
-    }
-    
-    fevent_enable(sEventAppSim, event);
+//    /*
+//        - Qua Init Module sim
+//        - Neu trong queue con nhieu step (Full) -> bo qua
+//    */
+//    
+//    if (sSimCommon.GroupStepID_u8 > _GR_SETTING)
+//    {
+//        if (qGet_Number_Items(&qSimStep) < (SIM_MAX_ITEM_QUEUE - 5))
+//        {
+//            //Default struct value GPS
+//            Sim_Defaul_Struct_GPS();  
+//            //Push lenh lay toa do
+//            fPushBlockSimStepToQueue(aSimStepBlockLocation, sizeof(aSimStepBlockLocation)); 
+//        }
+//    }
+//    
+//    fevent_enable(sEventAppSim, event);
 
     return 1;
 }
 
 
+//double TestLocatOrigin[2] = {21.05836,105.89966};
+//
+//
+//double TestLocat[15][2] = 
+//{
+//    { 21.05836, 105.89964 },
+//    { 21.05837, 105.89962 },
+//    { 21.05837, 105.89958 },
+//    { 21.05837, 105.89960 },
+//    { 21.05837, 105.89961 },
+//    { 21.05837, 105.89960 },
+//    { 21.05837, 105.89958 },
+//    { 21.05837, 105.89956 },
+//    { 21.05835, 105.89957 },
+//    { 21.05835, 105.89957 },
+//    { 21.05836, 105.89957 },
+//    { 21.05836, 105.89957 },
+//};
+//
+//uint8_t PosFindtest = 0;
 
 uint8_t _Cb_Event_Sim_Get_GPS (uint8_t event)
 {
-    static uint8_t MarkGPSError_u8 = false;
-    
-    //At gps ok + Chua lay du lieu
-    if ( (sAppSimVar.IsGetGPS_u8 == false) && (sSimCommon.sGPS.Status_u8 != false) && (sRTC.year > 20) )
-    {
-        sAppSimVar.IsGetGPS_u8 = true;  
-        
-        //neu tiep tuc gps error bo qua dong goi
-        if ( (sSimCommon.sGPS.Status_u8 == error) && (MarkGPSError_u8 == true) )
-        {
-            UTIL_Printf_Str( DBLEVEL_M, "u_app_sim: gps error continue!\r\n" );
-            
-            fevent_enable(sEventAppSim, event);
-            return 1;
-        }
-        
-        //Copy to Buffer data
-        if (sAppSimVar.sDataGPS.Length_u16 == 0)
-        {
-            //Them Stime vao truoc
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = OBIS_TIME_DEVICE;   // sTime
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = 0x06;
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.year;
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.month;
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.date;
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.hour;
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.min;
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.sec;
-        } else
-        {
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ';';
-        }
-
-        //Neu status = true, packet data or status = error packet 0,0 util have data again
-        if (sSimCommon.sGPS.Status_u8 == true)
-        {
-            MarkGPSError_u8 = false;
-            
-            for (uint16_t i = 0; i < sSimCommon.sGPS.LengData_u8; i++)
-            {
-                *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sSimCommon.sGPS.aPOS_INFOR[i];  
-                
-                if (sAppSimVar.sDataGPS.Length_u16 >= 250)
-                    break;
-            }
-        } else if (MarkGPSError_u8 == false)
-        {
-            MarkGPSError_u8 = true;
-            
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = '0';
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ',';
-            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = '0';
-        }
-        
-        //Kiem tra xem da day buff chua: -> Luu vao -> gui di
-        if (sAppSimVar.sDataGPS.Length_u16 > 200)
-        {
-            //Send to queue write 
-            AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_GPS_A, sAppSimVar.sDataGPS.Data_a8, sAppSimVar.sDataGPS.Length_u16);
-            //Memset data
-            sAppSimVar.sDataGPS.Length_u16 = 0;
-        }
-    }
+//    static uint8_t MarkGPSError_u8 = false;
+//    
+//    //At gps ok + Chua lay du lieu
+//    if ( (sAppSimVar.IsGetGPS_u8 == false) && (sSimCommon.sGPS.Status_u8 != false) && (sRTC.year > 20) )
+//    {
+//        sAppSimVar.IsGetGPS_u8 = true;  
+//        
+//        //neu tiep tuc gps error bo qua dong goi
+//        if ( (sSimCommon.sGPS.Status_u8 == error) && (MarkGPSError_u8 == true) )
+//        {
+//            UTIL_Printf_Str( DBLEVEL_M, "u_app_sim: gps error continue!\r\n" );
+//            
+//            fevent_enable(sEventAppSim, event);
+//            return 1;
+//        }
+//        
+//        //Copy to Buffer data
+//        if (sAppSimVar.sDataGPS.Length_u16 == 0)
+//        {
+//            //Them Stime vao truoc
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = OBIS_TIME_DEVICE;   // sTime
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = 0x06;
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.year;
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.month;
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.date;
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.hour;
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.min;
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.sec;
+//        } else
+//        {
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ';';
+//        }
+//
+//        //Neu status = true, packet data or status = error packet 0,0 util have data again
+//        if (sSimCommon.sGPS.Status_u8 == true)
+//        {
+//            MarkGPSError_u8 = false;
+//            
+//            for (uint16_t i = 0; i < sSimCommon.sGPS.LengData_u8; i++)
+//            {
+//                *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sSimCommon.sGPS.aPOS_INFOR[i];  
+//                
+//                if (sAppSimVar.sDataGPS.Length_u16 >= 250)
+//                    break;
+//            }
+//        } else if (MarkGPSError_u8 == false)
+//        {
+//            MarkGPSError_u8 = true;
+//            
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = '0';
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ',';
+//            *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = '0';
+//        }
+//        
+//        //Kiem tra xem da day buff chua: -> Luu vao -> gui di
+//        if (sAppSimVar.sDataGPS.Length_u16 > 200)
+//        {
+//            //Send to queue write 
+//            AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_GPS_A, sAppSimVar.sDataGPS.Data_a8, sAppSimVar.sDataGPS.Length_u16);
+//            //Memset data
+//            sAppSimVar.sDataGPS.Length_u16 = 0;
+//        }
+//    }
   
-    fevent_enable(sEventAppSim, event);
+//    if (sAppSimVar.sGPS.Status_u8 == true)
+//    {
+//        //Tinh toan va push data
+//        AppSim_GPS_Packet_Record (AppSim_GPS_Check_Moving());
+//        
+//        sAppSimVar.sGPS.Status_u8 = false;
+//        sAppSimVar.sGPS.Index_u8 = 0;
+//    }
+//          
+//    fevent_enable(sEventAppSim, event);
 
     return 1;
 }
@@ -178,9 +207,18 @@ uint8_t _Cb_Event_Sim_Get_GPS (uint8_t event)
 */
 uint8_t _Cb_Event_Sim_Send_Mess (uint8_t event)
 {
+    uint8_t isFinishHandleSim = true;
+    
+    //Neu con ban tin moi: Enable lai check new rec
+    if ( (sSimCommon.PowerStatus_u8 != _POWER_POWER_OFF) && (AppMem_Check_New_Record() == true) )
+    {
+        isFinishHandleSim = false;
+    } 
+    
     switch (sSimCommon.PowerStatus_u8)
     {
         case _POWER_START:
+            sAppMem.PendingNewMess_u8 = false;   //cho xu ly newmess khi khoi dong lai
             Sim_Disable_All_Event();
             fevent_active(sEventSim, _EVENT_SIM_TURN_ON);
             break;
@@ -219,8 +257,14 @@ uint8_t _Cb_Event_Sim_Send_Mess (uint8_t event)
                         fevent_enable(sEventAppSim, event);
                     } else
                     {
-                        //POW off module SIM -> go to lowpower
-                        fevent_active(sEventSim, _EVENT_SIM_POWER_OFF);
+                        if (isFinishHandleSim == true)
+                        {
+                            //POW off module SIM -> go to lowpower
+                            fevent_active(sEventSim, _EVENT_SIM_POWER_OFF);
+                        } else
+                        {
+                            fevent_enable(sEventAppSim, event);
+                        }
                     }
                 }
             }
@@ -228,11 +272,6 @@ uint8_t _Cb_Event_Sim_Send_Mess (uint8_t event)
             break;
         case _POWER_PSM:
             //Active Event Power ON SIM
-            fevent_active(sEventSim, _EVENT_SIM_TURN_ON);
-            break;
-        case _POWER_POWER_OFF:
-            //Active Event Power ON SIM
-            Sim_Disable_All_Event();
             fevent_active(sEventSim, _EVENT_SIM_TURN_ON);
             break;
         default:
@@ -346,6 +385,11 @@ uint8_t AppSim_Process_AT_Event (uint8_t Type)
             break;
         case _SIM_COMM_EVENT_GPS_OK:
 //            fPushBlockSimStepToQueue(aSimStepBlockDelLocation, sizeof(aSimStepBlockDelLocation));  
+            //Xu lý
+            AppSim_GPS_OK();
+            break;
+        case _SIM_COMM_EVENT_GPS_ERROR:
+            AppSim_GPS_Error();
             break;
         case _SIM_COMM_EVENT_TCP_SEND_1:  
             _CbAppSim_TCP_Send_1(&sMQTT.str);
@@ -599,6 +643,395 @@ void AppSim_Unmark_Mess (uint8_t TypeMess)
     sMQTT.aMARK_MESS_PENDING[TypeMess] = FALSE; 
     Reset_Buff(&sAppSimVar.sDataFlashSim);
 }
+
+
+/*
+    Func: get location value
+*/
+void AppSim_GPS_OK (void)
+{
+    uint16_t i = 0;
+    double LatTemp = 0;
+    double LongTemp = 0;
+    
+    sAppSimVar.sGPS.MarkFirstError_u8 = false;
+    //extract lat long to check format
+    if (AppSim_GPS_Extract_Lat_Long (sSimCommon.sGPS.aPOS_INFOR, sSimCommon.sGPS.LengData_u8, &LatTemp, &LongTemp) == true)
+    {       
+        if ( sAppSimVar.sGPS.IsInit_u8 == false)
+        {
+            //Lay toa do goc
+            sAppSimVar.sGPS.IsInit_u8 = true;
+            
+            sAppSimVar.sGPS.sLocaOrigin.Length_u8 = sSimCommon.sGPS.LengData_u8;
+            for (i = 0; i < sAppSimVar.sGPS.sLocaOrigin.Length_u8; i++)
+            {
+                sAppSimVar.sGPS.sLocaOrigin.aData[i] = sSimCommon.sGPS.aPOS_INFOR[i];
+            }
+            //
+            sAppSimVar.sGPS.sLocaOrigin.Lat = LatTemp;
+            sAppSimVar.sGPS.sLocaOrigin.Long = LongTemp;
+        } else
+        {
+            if (sAppSimVar.sGPS.Status_u8 != false)
+                return;
+            
+            //Lay toa do goc            
+            sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].Length_u8 = sSimCommon.sGPS.LengData_u8;
+            for (i = 0; i < sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].Length_u8; i++)
+            {
+                sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].aData[i] = sSimCommon.sGPS.aPOS_INFOR[i];
+            }
+            //
+            sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].Lat = LatTemp;
+            sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].Long = LongTemp;
+            
+            sAppSimVar.sGPS.Index_u8++;
+                        
+            //Kiem tra xem da lay du so diem (14 diem)
+            if (sAppSimVar.sGPS.Index_u8 >= MAX_SAMPLE_GPS)
+            {
+                sAppSimVar.sGPS.Status_u8 = true;
+            }
+        }
+    } else
+    {
+        //error gps data
+        AppSim_GPS_Error();
+    }
+}
+
+/*
+    Func: tach gia tri lat va long tu chuoi gps nhan dc tu module sim
+        + Format: format: (-)dd.ddddd,(-)ddd.ddddd
+        + Ex: 
+*/
+uint8_t AppSim_GPS_Extract_Lat_Long (uint8_t *pData, uint16_t Length, double *Lat, double *Long)
+{
+    uint16_t    i = 0;
+    uint32_t	TempU32 = 0;
+    uint8_t 	Decimal = 0;
+    uint8_t		MarkDecimal = false;
+         
+    double 		TempFloat[3] = {0};
+    uint8_t 	Index = 0;
+    uint8_t 	Sign[3] = {false, false};
+    uint8_t     Status[3] = {false, false};
+
+    //Cho them 1 vi tri: de tao so ket thuc
+    for (i = 0; i < (Length + 1) ; i++)
+    {
+        if ( (pData[i] == ',') || (i == Length) )
+        {
+            //Get Value
+            Status[Index] = true; 
+            
+            if (Sign[Index] == true)
+            {
+                TempFloat[Index] = 0 - TempU32 / ( pow (10, Decimal) ) ;
+            } else
+            {
+                TempFloat[Index] = TempU32 / ( pow (10, Decimal) ) ;
+            }
+            //Tang index
+            Index++;	
+            
+            //mem set variable
+            Decimal = 0;
+            MarkDecimal = false;
+            TempU32 = 0;
+            
+            continue;
+        }
+        
+        //Danh dau so am
+        if (pData[i] == '-')
+        {
+            Sign[Index] = true;	
+            continue;
+        } 
+
+        //Danh dau vi tri decimal
+        if (pData[i] == '.')
+        {
+            MarkDecimal = true;
+            continue;
+        }
+
+        //Increase count decimal
+        if (MarkDecimal == true)
+        {
+            Decimal++;
+        }
+        
+        //Value
+        if ( (pData[i] < 0x30) || ( pData[i] > 0x39 ) )     
+        {
+            return false;
+        }
+        
+        TempU32 = TempU32 * 10 + pData[i] - 0x30;
+    }
+    
+    //Kiem tra gia tri lay ra
+    if ((Status[0] == true) && (Status[1] == true) )
+    {
+        *Lat = TempFloat[0];
+        *Long = TempFloat[1];
+        
+        return true;
+    }
+    
+    return false;
+}
+
+
+
+/*
+    Func: Kiem tra khoang cach giua cac diem gps voi diem goc
+        + Neu qua 1 nua so diem: co khoang cach >50m
+            -> xe dang chay: Copy het gps vao buff -> Push mess
+        + Neu < 1 nua so diem: co khoang cach > 50m
+            -> xe k di chuyen: tinh trung binh
+
+        return: 0xFF: xe dang di chuyen -> Dong goi toan bo data gps nhuu thu thap
+                Vi tri gan nhat voi trung binh: -> dong goi toan bo data la diem gan nhat do
+*/
+
+
+uint8_t AppSim_GPS_Check_Moving (void)
+{
+    double Distance[20] = {0};
+    uint16_t i = 0;
+    uint8_t CountMore50m = 0;
+    uint8_t CountPosError = 0;
+    double DistAverage = 0, TempDist = 0, MinDist = 0;
+    uint8_t PosFind = 0;
+    
+    //Lan luot tinh toan khoang cach
+    for (i = 0; i < sAppSimVar.sGPS.Index_u8 ; i++)
+    {
+        if ( (sAppSimVar.sGPS.sLocation[i].Lat == 0) && (sAppSimVar.sGPS.sLocation[i].Long == 0) )
+        {
+            Distance[i] = -1;   //Nhung diem error danh dau gia tri dis = -1
+            CountPosError++;
+            continue;
+        }
+        
+        Distance[i] = 1000 * UTIL_Cacul_Distance(sAppSimVar.sGPS.sLocation[i].Lat, sAppSimVar.sGPS.sLocation[i].Long, 
+                                                 sAppSimVar.sGPS.sLocaOrigin.Lat, sAppSimVar.sGPS.sLocaOrigin.Long, 'K'); 
+    }
+    
+    //so sanh
+    for (i = 0; i < sAppSimVar.sGPS.Index_u8; i++)
+    {
+        if (Distance[i] > DISTANCE_GPS_MOVE)
+            CountMore50m++;
+    }
+    
+    
+    if ( CountMore50m >= (MAX_SAMPLE_GPS / 2) )   //fix 1 nua cua 14.  sAppSimVar.sGPS.Index_u8 / 2
+    {
+        //Neu qua nua vi tri > 50m: Xem dang di chuyen
+        return 0xFF;   
+    } else
+    {
+        //Neu chua dc 1 nua vi tri > 50m. Xe dang dung yen: 
+        // Tinh trung binh va tim vi tri gan nhat de dong goi ban tin
+        for (i = 0; i < sAppSimVar.sGPS.Index_u8 ; i++)
+        {
+            if (Distance[i] == -1)
+                continue;
+            
+            DistAverage += Distance[i];
+        }
+        DistAverage = DistAverage / (sAppSimVar.sGPS.Index_u8 - CountPosError);
+        
+        //Tim gia tri gan voi gia tri trung binh    
+        MinDist = DistAverage;
+        for (i = 0; i < sAppSimVar.sGPS.Index_u8 ; i++)
+        {
+            if (Distance[i] == -1)
+            {
+                continue;
+            }
+            //Tinh khoang cách voi gia tri trung binh
+            if (DistAverage > Distance[i])
+            {
+                TempDist = DistAverage - Distance[i];
+            } else
+            {
+                TempDist = Distance[i] - DistAverage;
+            }
+            
+            //Check xem co phai gia tri nho nhat k?
+            if (TempDist < MinDist)
+            {
+                MinDist = TempDist;
+                PosFind = i;
+            }
+        }
+        
+        return PosFind;
+    }
+}
+
+/*
+    Func: Dong goi GPS Record to save
+*/
+
+void AppSim_GPS_Packet_Record (uint8_t CheckResult)
+{
+    uint16_t  i = 0, Count = 0;
+    
+    Reset_Buff(&sAppSimVar.sDataGPS);
+    //Them Stime vao truoc
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = OBIS_TIME_DEVICE;   // sTime
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = 0x06;
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.year;
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.month;
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.date;
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.hour;
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.min;
+    *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sRTC.sec;
+    
+    if (CheckResult == 0xFF)
+    {          
+        for (i = 0; i < sAppSimVar.sGPS.Index_u8; i++)
+        {
+            //Ngan cach giua cac toa do la dau ;
+            if (i != 0)
+                *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ';';
+            //Data cua tung vi tri
+            for (Count = 0; Count < sAppSimVar.sGPS.sLocation[i].Length_u8; Count++)
+            {
+                *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sAppSimVar.sGPS.sLocation[i].aData[Count];
+            }
+            
+            if (sAppSimVar.sDataGPS.Length_u16 >= 236)
+            {
+                break;
+            }
+        }
+        
+        //Send to queue write 
+        AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_GPS_A, sAppSimVar.sDataGPS.Data_a8, sAppSimVar.sDataGPS.Length_u16);
+       
+        //Lay lai toa do goc: Toa do cuoi cung (neu di chuyen): tim vi tri toa do khac 0 tu cuoi
+        for (i = sAppSimVar.sGPS.Index_u8; i > 0; i--)
+        {
+            if ( (sAppSimVar.sGPS.sLocation[i - 1].Lat != 0) || (sAppSimVar.sGPS.sLocation[i - 1].Long != 0 ) )
+                break;
+        }
+        
+        sAppSimVar.sGPS.sLocaOrigin.Lat = sAppSimVar.sGPS.sLocation[i - 1].Lat;
+        sAppSimVar.sGPS.sLocaOrigin.Long = sAppSimVar.sGPS.sLocation[i - 1].Long;
+        
+    } else
+    {
+        //Dong goi tat ca gps là toa do gan nhat
+        for (i = 0; i < sAppSimVar.sGPS.Index_u8; i++)
+        {
+            //Ngan cach giua cac toa do la dau ;
+            if (i != 0)
+                *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = ';';
+            //Data cua tung vi tri
+            for (Count = 0; Count < sAppSimVar.sGPS.sLocation[CheckResult].Length_u8; Count++)
+            {
+                *(sAppSimVar.sDataGPS.Data_a8 + sAppSimVar.sDataGPS.Length_u16++) = sAppSimVar.sGPS.sLocation[CheckResult].aData[Count];
+            }
+            
+            if (sAppSimVar.sDataGPS.Length_u16 >= 236)
+            {
+                break;
+            }
+        }
+        
+        //Send to queue write 
+        AppMem_Push_Mess_To_Queue_Write(_FLASH_TYPE_DATA_GPS_A, sAppSimVar.sDataGPS.Data_a8, sAppSimVar.sDataGPS.Length_u16);
+        //Lay lai toa do goc: toa do diem gan nhat (neu dung yen)
+        sAppSimVar.sGPS.sLocaOrigin.Lat = sAppSimVar.sGPS.sLocation[CheckResult].Lat;
+        sAppSimVar.sGPS.sLocaOrigin.Long = sAppSimVar.sGPS.sLocation[CheckResult].Long;
+    }    
+}
+
+/*
+    Func: callback gps error  : Packet lat and long 0,0
+        - Neu lan tiep theo van loi: k lay du lieu 0,0
+        - util next gps ok:
+*/
+void AppSim_GPS_Error (void)
+{
+    if (sAppSimVar.sGPS.MarkFirstError_u8 == false)
+    {
+        sAppSimVar.sGPS.CountError_u16 = 0;
+        //
+        sAppSimVar.sGPS.MarkFirstError_u8 = true;
+        
+        sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].aData[0] = '0';
+        sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].aData[1] = ',';
+        sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].aData[2] = '0';
+        
+        sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].Length_u8 = 3;
+        
+        sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].Lat = 0;
+        sAppSimVar.sGPS.sLocation[sAppSimVar.sGPS.Index_u8].Long = 0;
+        
+        sAppSimVar.sGPS.Index_u8++;
+            
+        //Kiem tra xem da lay du so diem (14 diem)
+        if (sAppSimVar.sGPS.Index_u8 >= MAX_SAMPLE_GPS)
+        {
+            sAppSimVar.sGPS.Status_u8 = true;
+        }
+    } else
+    {
+        sAppSimVar.sGPS.CountError_u16++;
+        //12h: 12*3600/5 = 8640 Power on moudle again (power on gps?)
+        if (sAppSimVar.sGPS.CountError_u16 >= 8640)
+        {
+            sAppSimVar.sGPS.CountError_u16 = 0;
+            fevent_active(sEventSim, _EVENT_SIM_TURN_ON);
+        }
+    }
+}
+
+
+
+
+
+///*
+//    Uart sim Rx Callback
+//*/
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) 
+//{
+//    if (huart->Instance == huart2.Instance)
+//    {
+//        uint8_t	TempRecieve_u8 = 0;
+//        
+//        TempRecieve_u8 = (uint8_t)(huart2.Instance->DR & 0x00FF);
+//                
+//        *(sUartSim.Data_a8 + sUartSim.Length_u16++) = TempRecieve_u8;
+//
+//        if (sUartSim.Length_u16 >= (sizeof(uartSimBuffReceive) - 1))
+//            sUartSim.Length_u16 = 0;
+//
+//        fevent_enable(sEventSim, _EVENT_SIM_UART_RECEIVE);
+//    }
+//}
+
+
+/*
+    Func: Start Module sim send data
+*/
+void AppSim_Start_Module_Sim (void)
+{
+    if (sSimCommon.PowerStatus_u8 == _POWER_POWER_OFF)
+        sSimCommon.PowerStatus_u8 = _POWER_START;
+    
+    fevent_active(sEventAppSim, _EVENT_SIM_SEND_MESS);
+}
+
 
 
 

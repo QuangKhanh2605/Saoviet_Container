@@ -30,6 +30,7 @@ static uint8_t _Cb_AT_CHECK_ATTACH(sData *str_Receive);
 static uint8_t _CbAT_GET_CLOCK(sData *uart_string);
 static uint8_t _CbAT_CHECK_SIM(sData *uart_string);
 static uint8_t _CbAT_GET_IP_SIM(sData *uart_string);
+static uint8_t _CbAT_TCP_CLOSE_1(sData *uart_string);
 static uint8_t _CbAT_NON_TRANPARENT_MODE(sData *uart_string);
 static uint8_t _CbAT_TRANPARENT_MODE(sData *uart_string);
 static uint8_t _CbAT_OPEN_TCP_1 (sData *uart_string);
@@ -113,9 +114,10 @@ uint8_t aSimStepBlockNework[10] =
 
 
 #ifdef USING_TRANSPARENT_MODE
-    uint8_t aSimStepBlockConnect[12] = 
+    uint8_t aSimStepBlockConnect[13] = 
     {
-        _SIM_TCP_CLOSE,      //0
+        _SIM_TCP_CLOSE_1,
+        _SIM_TCP_CLOSE_2,
         _SIM_TCP_NETCLOSE,
         _SIM_TCP_TRANS_SETUP, //1
         _SIM_TCP_TRANS,       //2
@@ -143,9 +145,10 @@ uint8_t aSimStepBlockNework[10] =
         _SIM_MQTT_PUB_FB_2,
     };
 #else
-    uint8_t aSimStepBlockConnect[16] = 
+    uint8_t aSimStepBlockConnect[17] = 
     {
-        _SIM_TCP_CLOSE,      //0
+        _SIM_TCP_CLOSE_1,
+        _SIM_TCP_CLOSE_2,
         _SIM_TCP_NETCLOSE,
         _SIM_TCP_TRANS_SETUP, //1
         _SIM_TCP_TRANS,       //2
@@ -191,10 +194,11 @@ uint8_t  aSIM_STEP_INFOR_CSQ[3] =
 };
 
 
-uint8_t aSimStepBlockDisConnect[3] = 
+uint8_t aSimStepBlockDisConnect[4] = 
 {
     _SIM_TCP_OUT_DATAMODE,
-	_SIM_TCP_CLOSE,
+	_SIM_TCP_CLOSE_1,
+    _SIM_TCP_CLOSE_2,
 	_SIM_TCP_NETCLOSE,
 };
 
@@ -303,17 +307,19 @@ const sCommand_Sim_Struct aSimL506Step[] =
     {   _SIM_TCP_TRANS, 		_CbAT_TRANPARENT_MODE,      at_callback_failure,            "OK",               "AT+CIPMODE=2\r" 	 	}, 
     {   _SIM_TCP_IN_DATAMODE,   _CbAT_TRANPARENT_MODE,      at_callback_failure,            "CONNECT",          "ATO\r"		    },
 #else
-    {   _SIM_TCP_OUT_DATAMODE, 	_CbAT_NON_TRANPARENT_MODE,  at_callback_failure,            NULL, 			NULL            }, 
-    {   _SIM_TCP_TRANS, 		_CbAT_TRANPARENT_MODE,      at_callback_failure,            "OK",           "AT+CIPMODE=0\r", 		}, 
-    {   _SIM_TCP_IN_DATAMODE,   _CbAT_TRANPARENT_MODE,      at_callback_failure,            NULL,		    NULL            },
+    {   _SIM_TCP_OUT_DATAMODE, 	_CbAT_NON_TRANPARENT_MODE,  at_callback_failure,            NULL, 			    NULL            }, 
+    {   _SIM_TCP_TRANS, 		_CbAT_TRANPARENT_MODE,      at_callback_failure,            "OK",               "AT+CIPMODE=0\r", 		}, 
+    {   _SIM_TCP_IN_DATAMODE,   _CbAT_TRANPARENT_MODE,      at_callback_failure,            NULL,		        NULL            },
 #endif   
     
-    {   _SIM_TCP_TRANS_SETUP,   at_callback_success,        at_callback_failure,            "OK",       "AT+MCIPCFGPL=0,1,0,0,0\r",    	}, 
+    {   _SIM_TCP_TRANS_SETUP,   at_callback_success,        at_callback_failure,            "OK",               "AT+MCIPCFGPL=0,1,0,0,0\r",    	}, 
     //Cmd TCP 
     {   _SIM_TCP_GET_IP_SIM,	_CbAT_GET_IP_SIM,           at_callback_failure,            "+IPADDR:",         "AT+IPADDR\r"   },         
     {	_SIM_TCP_NETOPEN,	    at_callback_success,        at_callback_failure,            "+NETOPEN:SUCCESS", "AT+NETOPEN\r"	},
     {   _SIM_TCP_NETCLOSE,      at_callback_success,        at_callback_failure,            "OK",               "AT+NETCLOSE\r"	},
-	{	_SIM_TCP_CLOSE,	 	    at_callback_success,        at_callback_failure,            "OK",	            "AT+CIPCLOSE=0\r" 	},
+
+    {	_SIM_TCP_CLOSE_1,	 	_CbAT_TCP_CLOSE_1,          at_callback_failure,            NULL,	            "AT+CIPCLOSE="  	},
+    {	_SIM_TCP_CLOSE_2,	 	at_callback_success,        at_callback_failure,            "OK",	            "\r"  	}, 
 
     {	_SIM_TCP_CONNECT_1,	    _CbAT_OPEN_TCP_1,           at_callback_failure,            NULL,               "AT+CIPOPEN="  	},
 #ifdef USING_TRANSPARENT_MODE
@@ -539,15 +545,20 @@ static uint8_t _CbAT_CHECK_SIM(sData *uart_string)
     return 1;
 }
 
-
-
-
-
+static uint8_t _CbAT_TCP_CLOSE_1(sData *uart_string)
+{
+    uint8_t aCID = CID_SERVER;
+    
+    Sim_Common_Send_AT_Cmd(&uart_sim, &aCID, 1, 1000);
+    
+    return 1;
+}
 static uint8_t _CbAT_GET_IP_SIM(sData *uart_string)
 {
     
     return 1;
 }
+
 
 
 static uint8_t _CbAT_OPEN_TCP_1(sData *uart_string)

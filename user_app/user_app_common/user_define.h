@@ -55,7 +55,7 @@
 #define INC_APP_TEMH_FEATURE 
 
 #ifdef INC_APP_TEMH_FEATURE
-    #include "user_app_temh.h"
+    #include "user_app_inverter.h"
 #endif 
 
 
@@ -90,7 +90,7 @@
 #define MAX_MESS_IN_PACKET                              1       //1 ban tin 31 byte. Max 512 byte - 45 byte header
 
 /*--- ID cua thiet bi -------*/
-#define DEVICE_ID                                       "SVTHGS23000001"  
+#define DEVICE_ID                                       "SVWMCI23000002"  
 
 
 #define DEFAULT_FREQ_SEND_ONLINE                        2

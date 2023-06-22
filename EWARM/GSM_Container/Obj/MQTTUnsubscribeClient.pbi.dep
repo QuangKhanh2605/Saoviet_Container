@@ -1,10 +1,10 @@
 MQTTUnsubscribeClient.pbi: \
-  E:\8.2023\3.GSM_Container\user_component\mqtt_lib\src\MQTTUnsubscribeClient.c \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc\MQTTPacket.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTConnect.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTPacket.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTFormat.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc/StackTrace.h \
+  D:\Project_STM32\Saoviet_Container\user_component\mqtt_lib\src\MQTTUnsubscribeClient.c \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc\MQTTPacket.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTConnect.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTPacket.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTFormat.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc/StackTrace.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\stdio.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\ycheck.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\yvals.h \
@@ -12,9 +12,9 @@ MQTTUnsubscribeClient.pbi: \
   C:\\Program\ Files\ (x86)\\IAR\ Systems\\Embedded\ Workbench\ 8.3\\arm\\inc\\c\\DLib_Config_Full.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\ysizet.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTPublish.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTSubscribe.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTUnsubscribe.h \
-  E:\8.2023\3.GSM_Container\EWARM\..\user_component\mqtt_lib\inc\StackTrace.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTPublish.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTSubscribe.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc/MQTTUnsubscribe.h \
+  D:\Project_STM32\Saoviet_Container\EWARM\..\user_component\mqtt_lib\inc\StackTrace.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\string.h \
   C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_Product_string.h

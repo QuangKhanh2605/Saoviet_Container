@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "E:\8.2023\3.GSM_Container\EWARM\settings\GSM_Container.GSM_Container.general.xcl" --backend -f "E:\8.2023\3.GSM_Container\EWARM\settings\GSM_Container.GSM_Container.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "D:\Project_STM32\Saoviet_Container\EWARM\settings\GSM_Container.GSM_Container.general.xcl" --backend -f "D:\Project_STM32\Saoviet_Container\EWARM\settings\GSM_Container.GSM_Container.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "E:\8.2023\3.GSM_Container\EWARM\settings\GSM_Container.GSM_Container.general.xcl" "--debug_file=%~1" --backend -f "E:\8.2023\3.GSM_Container\EWARM\settings\GSM_Container.GSM_Container.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.3\common\bin\cspybat" -f "D:\Project_STM32\Saoviet_Container\EWARM\settings\GSM_Container.GSM_Container.general.xcl" "--debug_file=%~1" --backend -f "D:\Project_STM32\Saoviet_Container\EWARM\settings\GSM_Container.GSM_Container.driver.xcl" 
 
 @echo off 
 :end

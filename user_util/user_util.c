@@ -4,6 +4,8 @@
 */
 #include "user_util.h"
 #include "string.h"
+#include "math.h"
+
 
 /*===================Struct, Var=========================*/
 uint32_t        RtCountSystick_u32;
@@ -417,6 +419,67 @@ void UTIL_Printf_Dec (uint8_t Level, uint32_t Number)
 
     UTIL_Printf (Level, strNum.Data_a8 , strNum.Length_u16 );
 }
+
+
+
+/*
+    Passed to function:                                                    
+        lat1, lon1 = Latitude and Longitude of point 1 (in decimal degrees)  
+        lat2, lon2 = Latitude and Longitude of point 2 (in decimal degrees)  
+        unit = the unit you desire for results                               
+                where: 
+                    'M' is statute miles (default)                         
+                    'K' is kilometers                                  
+                    'N' is nautical miles   
+*/
+
+double UTIL_Cacul_Distance(double lat1, double lon1, double lat2, double lon2, char unit) 
+{
+    double theta, dist;
+    
+    if ((lat1 == lat2) && (lon1 == lon2))
+    {
+        return 0;
+    }
+    else 
+    {
+        theta = lon1 - lon2;
+        dist = sin(UTIL_Deg_2Rad(lat1)) * sin(UTIL_Deg_2Rad(lat2)) + cos(UTIL_Deg_2Rad(lat1)) * cos(UTIL_Deg_2Rad(lat2)) * cos(UTIL_Deg_2Rad(theta));
+        dist = acos(dist);
+        dist = UTIL_Rad_2Deg(dist);
+        dist = dist * 60 * 1.1515;
+        
+        switch(unit) 
+        {
+          case 'M':
+            break;
+          case 'K':
+            dist = dist * 1.609344;
+            break;
+          case 'N':
+            dist = dist * 0.8684;
+            break;
+        }
+        return (dist);
+    }
+}
+
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  This function converts decimal degrees to radians             :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+double UTIL_Deg_2Rad (double deg) 
+{
+    return (deg * pi / 180);
+}
+
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  This function converts radians to decimal degrees             :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+double UTIL_Rad_2Deg (double rad) 
+{
+    return (rad * 180 / pi);
+}
+
 
 
 

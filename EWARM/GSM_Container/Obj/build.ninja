@@ -54,10 +54,10 @@ build stm32l1xx_hal_uart.pbi : index stm32l1xx_hal_uart.xcl
 build user_app_comm.pbi : index user_app_comm.xcl
 build user_modem.pbi : index user_modem.xcl
 build user_modem_init.pbi : index user_modem_init.xcl
+build user_app_inverter.pbi : index user_app_inverter.xcl
 build user_app_mem.pbi : index user_app_mem.xcl
 build user_app_sim.pbi : index user_app_sim.xcl
 build user_mqtt.pbi : index user_mqtt.xcl
-build user_app_temh.pbi : index user_app_temh.xcl
 build user_at_serial.pbi : index user_at_serial.xcl
 build user_log.pbi : index user_log.xcl
 build user_uart.pbi : index user_uart.xcl
@@ -95,7 +95,7 @@ build GSM_Container_part0.pbi : link adc.pbi gpio.pbi i2c.pbi main.pbi rtc.pbi s
 build GSM_Container_part1.pbi : link usart.pbi system_stm32l1xx.pbi stm32l1xx_hal.pbi stm32l1xx_hal_adc.pbi stm32l1xx_hal_adc_ex.pbi stm32l1xx_hal_cortex.pbi stm32l1xx_hal_dma.pbi stm32l1xx_hal_exti.pbi
 build GSM_Container_part2.pbi : link stm32l1xx_hal_flash.pbi stm32l1xx_hal_flash_ex.pbi stm32l1xx_hal_flash_ramfunc.pbi stm32l1xx_hal_gpio.pbi stm32l1xx_hal_i2c.pbi stm32l1xx_hal_pwr.pbi stm32l1xx_hal_pwr_ex.pbi stm32l1xx_hal_rcc.pbi
 build GSM_Container_part3.pbi : link stm32l1xx_hal_rcc_ex.pbi stm32l1xx_hal_rtc.pbi stm32l1xx_hal_rtc_ex.pbi stm32l1xx_hal_spi.pbi stm32l1xx_hal_tim.pbi stm32l1xx_hal_tim_ex.pbi stm32l1xx_hal_uart.pbi user_app_comm.pbi
-build GSM_Container_part4.pbi : link user_modem.pbi user_modem_init.pbi user_app_mem.pbi user_app_sim.pbi user_mqtt.pbi user_app_temh.pbi user_at_serial.pbi user_log.pbi
+build GSM_Container_part4.pbi : link user_modem.pbi user_modem_init.pbi user_app_inverter.pbi user_app_mem.pbi user_app_sim.pbi user_mqtt.pbi user_at_serial.pbi user_log.pbi
 build GSM_Container_part5.pbi : link user_uart.pbi MQTTConnectClient.pbi MQTTConnectServer.pbi MQTTDeserializePublish.pbi MQTTFormat.pbi MQTTPacket.pbi MQTTSerializePublish.pbi MQTTSubscribeClient.pbi
 build GSM_Container_part6.pbi : link MQTTSubscribeServer.pbi MQTTUnsubscribeClient.pbi MQTTUnsubscribeServer.pbi cat24mxx.pbi user_external_eeprom.pbi S25FL216K.pbi user_external_flash.pbi user_internal_mem.pbi
 build GSM_Container_part7.pbi : link user_ec200u.pbi user_sim.pbi user_sim_common.pbi event_driven.pbi queue_p.pbi user_rtc.pbi user_timer.pbi onchipflash.pbi

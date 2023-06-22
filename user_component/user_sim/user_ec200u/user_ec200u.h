@@ -59,6 +59,7 @@ typedef enum
     
     _SIM_TCP_CLOSE_1,
     _SIM_TCP_CLOSE_2,
+    
 	_SIM_TCP_CONNECT_1,
     _SIM_TCP_CONNECT_2,
     
@@ -175,7 +176,7 @@ extern uint8_t aSimStepBlockNework[10];
     extern uint8_t aSIM_STEP_PUBLISH[4];
 #endif
 extern uint8_t aSIM_STEP_INFOR_CSQ[3];
-extern uint8_t aSimStepBlockDisConnect[3];
+extern uint8_t aSimStepBlockDisConnect[4];
 extern uint8_t aSimStepBlockGetClock[3];
 
 extern uint8_t aSimStepBlockHttpInit[19];

@@ -22,7 +22,7 @@
 #define TYPE_PART_AB                0
 #define TYPE_INDEX                  1
 
-#define FLASH_MANAGE_TYPE           TYPE_INDEX
+#define FLASH_MANAGE_TYPE           TYPE_PART_AB
 
 /*===================Define======================================*/
 
@@ -43,7 +43,7 @@
 #define FLASH_ADDR_TSVH_B_START 		0x104000		//Sector 260
 #define FLASH_ADDR_TSVH_B_STOP			0x1F3FFF		//Sector 500 (bao gom ca sector nay)
 
-#define FLASH_ADDR_TSVH_OFFSET			0x0FA000		//FLASH_ADDR_TSVH_B_START - FLASH_ADDR_TSVH_B_STOP = 240 sector
+#define FLASH_ADDR_TSVH_OFFSET			0x0FA000		//FLASH_ADDR_TSVH_B_START - FLASH_ADDR_TSVH_A_START = 240 sector
 
 #define FLASH_ADDR_EVENT_A_START 		0x1F5000		//Sector 501
 #define FLASH_ADDR_EVENT_A_STOP			0x208FFF		//Sector 521
@@ -51,20 +51,24 @@
 #define FLASH_ADDR_EVENT_B_START 		0x20B000		//Sector 523
 #define FLASH_ADDR_EVENT_B_STOP			0x21EFFF		//Sector 543
 
-#define FLASH_ADDR_EVENT_OFFSET   		0x0FA000		//FLASH_ADDR_EVENT_B_START - FLASH_ADDR_EVENT_B_STOP = 20 sector
+#define FLASH_ADDR_EVENT_OFFSET   		0x016000		//FLASH_ADDR_EVENT_B_START - FLASH_ADDR_EVENT_A_START = 20 sector
 
 #define FLASH_ADDR_LOG_START 			0x221000		//Sector 545		
 #define FLASH_ADDR_LOG_STOP				0x2346FF		//Sector 565	20 sector * 4096 / (64 byte 1 record log) = 1280 rec
 
-#define FLASH_ADDR_GPS_START 			0x237000		//Sector 567		
-#define FLASH_ADDR_GPS_STOP			    0x7AE6FF		//Sector 1967	1400 sector = 4096 record (x 1024 byte) = 16384 record (x256 byte)
+#define FLASH_ADDR_GPS_A_START 			0x237000		//Sector 567		
+#define FLASH_ADDR_GPS_A_STOP			0x7AE6FF		//Sector 1266	699 sector = 2796 record (x 1024 byte) = 11184 record (x256 byte)
 
+#define FLASH_ADDR_GPS_B_START 			0x237000		//Sector 1268		
+#define FLASH_ADDR_GPS_B_STOP			0x7AE6FF		//Sector 1967	699 sector = 2796 record (x 1024 byte) = 11184 record (x256 byte)
+
+#define FLASH_ADDR_GPS_OFFSET   		0x0FA000        // FLASH_ADDR_GPS_B_START -  FLASH_ADDR_GPS_A_START = 
 
 /*--------- Max size record ----------*/
 #define FLASH_MAX_RECORD_TSVH           500
 #define FLASH_MAX_RECORD_EVENT          500
 #define FLASH_MAX_RECORD_LOG            1000
-#define FLASH_MAX_RECORD_GPS            16384
+#define FLASH_MAX_RECORD_GPS            10000
 
 #define FLASH_SIZE_DATA_TSVH            128
 #define FLASH_SIZE_DATA_EVENT           64
